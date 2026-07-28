@@ -1,8 +1,8 @@
-# EcommerceDashboardPortal
+# Portal
 
 Landing page listing every brand's ecommerce dashboard. Click a brand's logo to open its
-dedicated dashboard (each brand is its own separate Streamlit app + database -- see
-[EcommerceSonyDashboard](https://github.com/Riekie3/EcommerceSonyDashboard) for the pattern).
+dedicated dashboard (each brand is its own separate Streamlit app + database, living as a
+sibling folder in this repo -- see `../SonyDashboard` for the pattern).
 
 ## Setup
 

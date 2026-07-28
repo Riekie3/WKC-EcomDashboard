@@ -1,9 +1,12 @@
-# EcommerceSonyDashboard
+# SonyDashboard
 
 A consolidated performance dashboard for **Shopee**, **Lazada**, and **TikTok Shop** built with
 Python (pandas + Streamlit). No platform APIs are used -- it ingests the Excel/CSV reports staff
 already export manually from each platform's seller center, normalizes them into a shared
 schema, and keeps a running history in a local SQLite database.
+
+Part of the [WKC-EcomDashboard](https://github.com/Riekie3/WKC-EcomDashboard) monorepo -- see
+`../Portal` for the multi-brand landing page this dashboard is linked from.
 
 ## Setup
 
