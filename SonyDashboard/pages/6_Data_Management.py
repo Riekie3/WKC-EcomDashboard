@@ -1,10 +1,10 @@
 import datetime
-import os
 
 import streamlit as st
 
 from src.ingestion.router import PLATFORM_LABELS, REPORT_TYPE_LABELS
-from src.storage.db import get_session, DEFAULT_DB_PATH, validate_backup, restore_database, erase_database
+from src.storage.db import get_session, erase_database
+from src.storage.backup import export_backup, validate_backup, restore_backup
 from src.storage import repository as repo
 from src.dashboard.branding import apply_logo, render_footer
 
@@ -57,17 +57,19 @@ else:
 
 st.divider()
 st.subheader("Backup")
-st.caption("Download the raw database file as a safety net -- useful since data is kept indefinitely.")
-if os.path.exists(DEFAULT_DB_PATH):
-    with open(DEFAULT_DB_PATH, "rb") as f:
-        st.download_button("Download database backup (app.db)", data=f.read(), file_name="app_backup.db")
-else:
-    st.caption("No data uploaded yet.")
+st.caption("Download a full export of every table as a safety net -- useful since data is kept indefinitely.")
+if st.button("Prepare backup"):
+    st.session_state["backup_bytes"] = export_backup(session)
+if "backup_bytes" in st.session_state:
+    st.download_button(
+        "Download backup (.zip)", data=st.session_state["backup_bytes"],
+        file_name=f"wkc_dashboard_backup_{datetime.date.today():%Y%m%d}.zip",
+    )
 
 st.divider()
 st.subheader("Restore from backup")
-st.caption("Upload a previously downloaded app.db backup. This replaces the entire current database -- everything currently in the dashboard that isn't in the backup will be lost.")
-backup_file = st.file_uploader("Backup file (.db)", type=["db"], key="restore_upload")
+st.caption("Upload a previously downloaded backup .zip. This replaces the entire current database -- everything currently in the dashboard that isn't in the backup will be lost.")
+backup_file = st.file_uploader("Backup file (.zip)", type=["zip"], key="restore_upload")
 if backup_file is not None:
     ok, msg = validate_backup(backup_file.getvalue())
     if not ok:
@@ -76,7 +78,7 @@ if backup_file is not None:
         st.warning("This will completely replace the current database with the uploaded backup. This cannot be undone.")
         confirm_restore = st.checkbox("I understand this replaces all current data.", key="confirm_restore")
         if st.button("Restore this backup", disabled=not confirm_restore, type="primary"):
-            restore_database(backup_file.getvalue())
+            restore_backup(session, backup_file.getvalue())
             st.success("Database restored from backup.")
             st.rerun()
 

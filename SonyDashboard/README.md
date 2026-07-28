@@ -3,7 +3,10 @@
 A consolidated performance dashboard for **Shopee**, **Lazada**, and **TikTok Shop** built with
 Python (pandas + Streamlit). No platform APIs are used -- it ingests the Excel/CSV reports staff
 already export manually from each platform's seller center, normalizes them into a shared
-schema, and keeps a running history in a local SQLite database.
+schema, and keeps a running history in a database. Uses local SQLite by default (zero setup);
+set a `DATABASE_URL` secret to use a hosted Postgres instead (see **Deploying** below) -- needed
+when hosting somewhere that doesn't keep local disk between restarts, like Streamlit Community
+Cloud.
 
 Part of the [WKC-EcomDashboard](https://github.com/Riekie3/WKC-EcomDashboard) monorepo -- see
 `../Portal` for the multi-brand landing page this dashboard is linked from.
@@ -69,9 +72,10 @@ JSON field even though most aren't surfaced on a chart yet.
   CPC ads: per-product affiliate commission (Shopee, TikTok), Shopee's traffic-source-by-product
   breakdown, and TikTok's creator/affiliate leaderboard.
 - **Data Management** -- delete a specific upload batch, delete by date range, download a backup
-  of the database file, restore from a previously downloaded backup (replaces all current data --
-  requires confirmation), or erase everything (requires typing "ERASE" to confirm). Data is kept
-  indefinitely by default (no automatic deletion).
+  (a `.zip` containing every table's data as JSON -- works the same regardless of whether the live
+  database is SQLite or Postgres), restore from a previously downloaded backup (replaces all
+  current data -- requires confirmation), or erase everything (requires typing "ERASE" to
+  confirm). Data is kept indefinitely by default (no automatic deletion).
 
 ## Project layout
 
@@ -88,14 +92,32 @@ src/
   storage/
     models.py                   # SQLAlchemy models (daily_sales, product_performance, ads_performance,
                                  #   affiliate_marketing, traffic_source_performance, creator_performance, upload_batches)
-    db.py                       # SQLite engine/session
+    db.py                       # engine/session -- SQLite by default, Postgres if DATABASE_URL is set
     repository.py                # insert/query/delete helpers
-data/app.db                     # SQLite database (created on first run, not committed)
+    backup.py                    # database-agnostic export/validate/restore (zip of per-table JSON)
+data/app.db                     # local SQLite database (created on first run, not committed) -- unused if DATABASE_URL is set
 ```
+
+## Deploying (Streamlit Community Cloud)
+
+Local disk doesn't persist across restarts/redeploys on Streamlit Community Cloud, so the
+default SQLite file would get wiped. To deploy there instead:
+
+1. Create a free Postgres database (e.g. [Supabase](https://supabase.com) or [Neon](https://neon.tech))
+   and copy its connection string.
+2. On [share.streamlit.io](https://share.streamlit.io), create a new app pointed at this repo,
+   with `SonyDashboard/Info.py` as the main file.
+3. In the app's **Settings → Secrets**, add:
+   ```toml
+   DATABASE_URL = "postgresql+psycopg://user:password@host:port/dbname"
+   ```
+4. Deploy. The app automatically uses Postgres once `DATABASE_URL` is set -- no code changes
+   needed, and running locally without that secret keeps using local SQLite as before.
+
+Note: Streamlit Community Cloud's free tier allows only **one private app**. Additional brand
+dashboards (Tefal, etc.) will need to be public, hosted elsewhere, or on a paid tier.
 
 ## Notes
 
 - Data is retained indefinitely; there is no automatic cleanup. Use the Data Management page's
   backup button periodically, especially before large deletes.
-- Hosting (local vs. Streamlit Community Cloud vs. an office server) is not yet decided -- nothing
-  in the current design assumes one or the other.
