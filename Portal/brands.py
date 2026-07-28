@@ -27,7 +27,7 @@ BRANDS = [
         "url_local": "http://localhost:8501",
         # Deployed on Streamlit Community Cloud, backed by Supabase Postgres
         # (see SonyDashboard/README.md "Deploying" section).
-        "url_public": "https://wkc-ecomdashboard.streamlit.app",
+        "url_public": "https://wkc-ecomdashboard-sony.streamlit.app",
         "status": "live",
     },
     {
