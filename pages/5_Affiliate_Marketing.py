@@ -5,8 +5,10 @@ from src.dashboard.filters import sidebar_filters
 from src.ingestion.router import PLATFORM_LABELS
 from src.storage.db import get_session
 from src.storage import repository as repo
+from src.dashboard.branding import apply_logo, render_footer
 
 st.set_page_config(page_title="Affiliate & Marketing", page_icon="🤝", layout="wide")
+apply_logo()
 st.title("🤝 Affiliate & Marketing")
 st.caption("Commission-based / creator-driven performance -- separate from paid CPC ads. These reports don't carry a per-row date, so they show the latest uploaded snapshot per platform.")
 
@@ -73,3 +75,5 @@ else:
     cols = ["creator_username", "affiliate_gmv", "commission", "orders", "followers"]
     cols = [c for c in cols if c in creators.columns]
     st.dataframe(creators[cols].sort_values("affiliate_gmv", ascending=False), width='stretch', hide_index=True)
+
+render_footer()

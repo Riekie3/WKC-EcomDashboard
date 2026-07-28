@@ -1,6 +1,9 @@
 import streamlit as st
 
+from src.dashboard.branding import apply_logo, render_footer
+
 st.set_page_config(page_title="Sony Ecommerce Dashboard", page_icon="📊", layout="wide")
+apply_logo()
 
 st.title("Sony Ecommerce Dashboard")
 st.markdown(
@@ -18,3 +21,5 @@ Data is kept indefinitely (no automatic deletion) so you can look back over the 
 Use the pages in the sidebar to get started.
     """
 )
+
+render_footer()

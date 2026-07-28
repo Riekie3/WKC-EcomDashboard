@@ -5,8 +5,10 @@ from src.dashboard.filters import sidebar_filters
 from src.ingestion.router import PLATFORM_LABELS
 from src.storage.db import get_session
 from src.storage import repository as repo
+from src.dashboard.branding import apply_logo, render_footer
 
 st.set_page_config(page_title="Ads Performance", page_icon="📣", layout="wide")
+apply_logo()
 st.title("📣 Ads Performance")
 
 platforms, start_date, end_date = sidebar_filters()
@@ -18,6 +20,7 @@ df = repo.query_df(session, "ads_performance", platforms=platforms)
 
 if df.empty:
     st.info("No ads performance data for this selection yet. Upload data on the Upload Data page (or note TikTok Shop has no CPC ads report in the current export bundle).")
+    render_footer()
     st.stop()
 
 df["platform_label"] = df["platform"].map(PLATFORM_LABELS)
@@ -51,3 +54,5 @@ if not campaigns.empty:
             sub[cols].sort_values("spend", ascending=False),
             width='stretch', hide_index=True,
         )
+
+render_footer()

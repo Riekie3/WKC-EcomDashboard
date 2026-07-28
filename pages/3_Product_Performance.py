@@ -5,8 +5,10 @@ from src.dashboard.filters import sidebar_filters
 from src.ingestion.router import PLATFORM_LABELS
 from src.storage.db import get_session
 from src.storage import repository as repo
+from src.dashboard.branding import apply_logo, render_footer
 
 st.set_page_config(page_title="Product Performance", page_icon="🏆", layout="wide")
+apply_logo()
 st.title("🏆 Product Performance")
 
 platforms, _, _ = sidebar_filters()
@@ -17,6 +19,7 @@ df = repo.query_df(session, "product_performance", platforms=platforms)
 
 if df.empty:
     st.info("No product performance data for this selection yet. Upload data on the Upload Data page.")
+    render_footer()
     st.stop()
 
 df["platform_label"] = df["platform"].map(PLATFORM_LABELS)
@@ -42,3 +45,5 @@ for platform in platforms:
         cols = ["product_name", "item_id", "sales", "units_sold", "orders", "impressions", "clicks", "ctr"]
         cols = [c for c in cols if c in sub.columns]
         st.dataframe(sub[cols].sort_values("sales", ascending=False), width='stretch', hide_index=True)
+
+render_footer()

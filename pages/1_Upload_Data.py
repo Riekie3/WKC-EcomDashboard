@@ -4,8 +4,10 @@ from src.ingestion.pipeline import parse_all
 from src.ingestion.router import PLATFORM_LABELS, REPORT_TYPE_LABELS
 from src.storage.db import get_session
 from src.storage import repository as repo
+from src.dashboard.branding import apply_logo, render_footer
 
 st.set_page_config(page_title="Upload Data", page_icon="📤", layout="wide")
+apply_logo()
 st.title("📤 Upload Data")
 st.write(
     "Drop in the export bundle your staff download from each platform -- either the whole "
@@ -66,3 +68,5 @@ if uploaded:
         st.info("No files are ready to save yet -- fix any errors above or upload different files.")
 else:
     st.caption("No files uploaded yet.")
+
+render_footer()

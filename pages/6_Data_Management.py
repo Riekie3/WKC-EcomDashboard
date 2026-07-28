@@ -6,8 +6,10 @@ import streamlit as st
 from src.ingestion.router import PLATFORM_LABELS, REPORT_TYPE_LABELS
 from src.storage.db import get_session, DEFAULT_DB_PATH, validate_backup, restore_database, erase_database
 from src.storage import repository as repo
+from src.dashboard.branding import apply_logo, render_footer
 
 st.set_page_config(page_title="Data Management", page_icon="🗑️", layout="wide")
+apply_logo()
 st.title("🗑️ Data Management")
 
 session = get_session()
@@ -87,3 +89,5 @@ with st.expander("Erase everything"):
         erase_database()
         st.success("All data erased.")
         st.rerun()
+
+render_footer()
