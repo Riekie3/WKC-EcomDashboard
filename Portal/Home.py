@@ -28,6 +28,7 @@ st.markdown(
         align-items: center;
         justify-content: center;
         height: 180px;
+        margin-bottom: 24px;
         border-radius: 12px;
         text-decoration: none;
         transition: transform 0.15s ease, box-shadow 0.15s ease;
