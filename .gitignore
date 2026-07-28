@@ -3,7 +3,7 @@ __pycache__/
 *.pyc
 **/data/*.db
 **/data/*.db-journal
-.streamlit/secrets.toml
+**/.streamlit/secrets.toml
 *.xlsx
 *.xls
 *.csv

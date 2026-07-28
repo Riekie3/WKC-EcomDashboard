@@ -6,8 +6,10 @@ from src.ingestion.router import PLATFORM_LABELS
 from src.storage.db import get_session
 from src.storage import repository as repo
 from src.dashboard.branding import apply_logo, render_footer
+from src.dashboard.auth import require_login
 
 st.set_page_config(page_title="Product Performance", page_icon="🏆", layout="wide")
+require_login()
 apply_logo()
 st.title("🏆 Product Performance")
 
