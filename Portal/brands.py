@@ -19,9 +19,10 @@ BRANDS = [
     {
         "name": "Sony",
         "logo": _asset("sony_logo.webp"),
-        # TODO: replace with the real hosted URL once the Sony dashboard is published
-        # (e.g. a Tailscale Funnel URL like https://your-desktop.your-tailnet.ts.net)
-        "url": "http://localhost:8501",
+        # Published via Tailscale Funnel from the desktop -- requires the desktop to be on
+        # and both `streamlit run Info.py` (SonyDashboard) and `tailscale funnel --bg 8501`
+        # to be running. Password-gated (see SonyDashboard/.streamlit/secrets.toml).
+        "url": "https://user20.tail672847.ts.net",
         "status": "live",
     },
     {
