@@ -1,8 +1,13 @@
 """Brand registry for the portal. Add a new brand by adding one entry here --
 nothing else in the app needs to change.
 
-status: "live" shows the logo as a clickable tile linking to `url`.
+status: "live" shows the logo as a clickable tile linking to the brand's dashboard.
         "coming_soon" shows a greyed-out placeholder tile (no link).
+
+url_local / url_public: the Portal picks whichever matches how *it* was accessed
+(see resolve_url() in Home.py, via st.context.url) -- so clicking a tile from
+localhost stays on localhost (fast, no Tailscale round-trip needed), while
+clicking it from the public Tailscale URL goes to the brand's public URL.
 """
 import os
 
@@ -19,16 +24,19 @@ BRANDS = [
     {
         "name": "Sony",
         "logo": _asset("sony_logo.webp"),
-        # Published via Tailscale Funnel from the desktop -- requires the desktop to be on
-        # and both `streamlit run Info.py` (SonyDashboard) and `tailscale funnel --bg 8501`
-        # to be running. Password-gated (see SonyDashboard/.streamlit/secrets.toml).
-        "url": "https://user20.tail672847.ts.net",
+        "url_local": "http://localhost:8501",
+        # Published via Tailscale Funnel from the desktop, on port 8443 (the Portal itself
+        # uses the default 443) -- requires the desktop on, `streamlit run Info.py`
+        # (SonyDashboard) running, and `tailscale funnel --bg --https=8443 8501` active.
+        # Password-gated (see SonyDashboard/.streamlit/secrets.toml).
+        "url_public": "https://user20.tail672847.ts.net:8443",
         "status": "live",
     },
     {
         "name": "Tefal",
         "logo": None,
-        "url": None,
+        "url_local": None,
+        "url_public": None,
         "status": "coming_soon",
     },
 ]

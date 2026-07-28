@@ -7,6 +7,18 @@ from brands import BRANDS
 
 st.set_page_config(page_title="Ecommerce Dashboard Portal", page_icon="🏠", layout="wide")
 
+
+def resolve_url(brand: dict) -> str | None:
+    """Pick url_local or url_public depending on how *this* Portal page was reached,
+    so a tile clicked from localhost stays on localhost instead of round-tripping
+    through Tailscale, while the public URL still works for everyone else."""
+    try:
+        current_url = st.context.url or ""
+    except Exception:
+        current_url = ""
+    is_local = "localhost" in current_url or "127.0.0.1" in current_url
+    return brand.get("url_local") if is_local else brand.get("url_public")
+
 st.markdown(
     """
     <style>
@@ -66,13 +78,14 @@ for row in rows:
     cols = st.columns(cols_per_row)
     for col, brand in zip(cols, row):
         with col:
-            if brand["status"] == "live" and brand["logo"] and os.path.exists(brand["logo"]):
+            url = resolve_url(brand)
+            if brand["status"] == "live" and brand["logo"] and url and os.path.exists(brand["logo"]):
                 with open(brand["logo"], "rb") as f:
                     b64 = base64.b64encode(f.read()).decode()
                 ext = os.path.splitext(brand["logo"])[1].lstrip(".")
                 st.markdown(
                     f"""
-                    <a class="brand-tile live" href="{brand['url']}" target="_blank" title="Open {brand['name']} dashboard">
+                    <a class="brand-tile live" href="{url}" target="_blank" title="Open {brand['name']} dashboard">
                         <img src="data:image/{ext};base64,{b64}" alt="{brand['name']}">
                     </a>
                     """,
