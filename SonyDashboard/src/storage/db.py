@@ -50,6 +50,20 @@ def is_sqlite() -> bool:
     return get_database_url().startswith("sqlite")
 
 
+def backend_label() -> str:
+    """Human-readable, secret-safe description of which database is currently in use --
+    useful for confirming a DATABASE_URL secret is actually being picked up once deployed
+    (a typo'd secret key silently falls back to local SQLite rather than erroring)."""
+    url = get_database_url()
+    if url.startswith("sqlite"):
+        return f"Local SQLite ({url.replace('sqlite:///', '')})"
+    try:
+        from sqlalchemy.engine import make_url
+        return f"Postgres ({make_url(url).host})"
+    except Exception:
+        return "Postgres (connection string set)"
+
+
 def erase_database():
     """Wipe all data in place (drop + recreate every table on the live engine).
     Works the same way regardless of backend (SQLite locally, Postgres when deployed) --

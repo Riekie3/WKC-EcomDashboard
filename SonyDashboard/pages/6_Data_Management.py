@@ -3,7 +3,7 @@ import datetime
 import streamlit as st
 
 from src.ingestion.router import PLATFORM_LABELS, REPORT_TYPE_LABELS
-from src.storage.db import get_session, erase_database
+from src.storage.db import get_session, erase_database, backend_label
 from src.storage.backup import export_backup, validate_backup, restore_backup
 from src.storage import repository as repo
 from src.dashboard.branding import apply_logo, render_footer
@@ -11,6 +11,7 @@ from src.dashboard.branding import apply_logo, render_footer
 st.set_page_config(page_title="Data Management", page_icon="🗑️", layout="wide")
 apply_logo()
 st.title("🗑️ Data Management")
+st.caption(f"Storage backend: {backend_label()}")
 
 session = get_session()
 
