@@ -37,4 +37,32 @@ BRANDS = [
         "url_public": None,
         "status": "coming_soon",
     },
+    {
+        "name": "3M",
+        "logo": None,
+        "url_local": None,
+        "url_public": None,
+        "status": "coming_soon",
+    },
+    {
+        "name": "GooN",
+        "logo": None,
+        "url_local": None,
+        "url_public": None,
+        "status": "coming_soon",
+    },
+    {
+        "name": "Coleman",
+        "logo": None,
+        "url_local": None,
+        "url_public": None,
+        "status": "coming_soon",
+    },
+    {
+        "name": "Montbell",
+        "logo": None,
+        "url_local": None,
+        "url_public": None,
+        "status": "coming_soon",
+    },
 ]
