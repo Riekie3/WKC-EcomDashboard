@@ -6,8 +6,8 @@ status: "live" shows the logo as a clickable tile linking to the brand's dashboa
 
 url_local / url_public: the Portal picks whichever matches how *it* was accessed
 (see resolve_url() in Home.py, via st.context.url) -- so clicking a tile from
-localhost stays on localhost (fast, no Tailscale round-trip needed), while
-clicking it from the public Tailscale URL goes to the brand's public URL.
+localhost stays on localhost during local testing, while clicking it on the
+deployed public Portal goes to the brand's own deployed URL.
 """
 import os
 
@@ -25,11 +25,9 @@ BRANDS = [
         "name": "Sony",
         "logo": _asset("sony_logo.webp"),
         "url_local": "http://localhost:8501",
-        # Published via Tailscale Funnel from the desktop, on port 8443 (the Portal itself
-        # uses the default 443) -- requires the desktop on, `streamlit run Info.py`
-        # (SonyDashboard) running, and `tailscale funnel --bg --https=8443 8501` active.
-        # Password-gated (see SonyDashboard/.streamlit/secrets.toml).
-        "url_public": "https://user20.tail672847.ts.net:8443",
+        # Deployed on Streamlit Community Cloud, backed by Supabase Postgres
+        # (see SonyDashboard/README.md "Deploying" section).
+        "url_public": "https://wkc-ecomdashboard.streamlit.app",
         "status": "live",
     },
     {
