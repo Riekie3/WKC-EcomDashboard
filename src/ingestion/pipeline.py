@@ -1,6 +1,6 @@
 import io
 import zipfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pandas as pd
 
@@ -19,11 +19,12 @@ REQUIRED_FIELDS = {
 @dataclass
 class ParsedFile:
     filename: str
+    raw: bytes = b""
     platform: str | None = None
     report_type: str | None = None
     df: pd.DataFrame | None = None
     error: str | None = None
-    warnings: list[str] | None = None
+    warnings: list[str] = field(default_factory=list)
 
     @property
     def recognized(self) -> bool:
@@ -56,14 +57,34 @@ def _validate(df: pd.DataFrame, report_type: str) -> list[str]:
     if df.empty:
         warnings.append("No rows were parsed from this file.")
         return warnings
-    for field in REQUIRED_FIELDS.get(report_type, []):
-        if field not in df.columns:
-            warnings.append(f"Expected column '{field}' is missing.")
+    for f in REQUIRED_FIELDS.get(report_type, []):
+        if f not in df.columns:
+            warnings.append(f"Expected column '{f}' is missing.")
             continue
-        null_frac = df[field].isna().mean()
+        null_frac = df[f].isna().mean()
         if null_frac > 0.5:
-            warnings.append(f"Over half of '{field}' values are missing ({null_frac:.0%}).")
+            warnings.append(f"Over half of '{f}' values are missing ({null_frac:.0%}).")
     return warnings
+
+
+def parse_with_mapping(filename: str, data: bytes, platform: str, report_type: str) -> ParsedFile:
+    """Parse a single file against an explicit (platform, report_type) -- used both for
+    filename-auto-detected files and for files the user manually assigned a mapping to."""
+    parser = router.get_parser(platform, report_type)
+    if parser is None:
+        return ParsedFile(
+            filename=filename, raw=data, platform=platform, report_type=report_type,
+            error="This report type isn't supported for this platform yet.",
+        )
+    try:
+        df = parser(io.BytesIO(data))
+        warnings = _validate(df, report_type)
+        return ParsedFile(filename=filename, raw=data, platform=platform, report_type=report_type, df=df, warnings=warnings)
+    except Exception as e:
+        return ParsedFile(
+            filename=filename, raw=data, platform=platform, report_type=report_type,
+            error=f"Couldn't read this file as a {platform}/{report_type} report: {e}",
+        )
 
 
 def parse_all(uploaded_files: list[tuple[str, bytes]]) -> list[ParsedFile]:
@@ -71,25 +92,7 @@ def parse_all(uploaded_files: list[tuple[str, bytes]]) -> list[ParsedFile]:
     for name, data in expand_uploads(uploaded_files):
         platform, report_type = router.detect(name)
         if not platform:
-            results.append(ParsedFile(filename=name))
+            results.append(ParsedFile(filename=name, raw=data))
             continue
-        parser = router.get_parser(platform, report_type)
-        if parser is None:
-            results.append(ParsedFile(
-                filename=name, platform=platform, report_type=report_type,
-                error="This report type is recognized but not yet supported for ingestion.",
-            ))
-            continue
-        try:
-            df = parser(io.BytesIO(data))
-            warnings = _validate(df, report_type)
-            results.append(ParsedFile(
-                filename=name, platform=platform, report_type=report_type,
-                df=df, warnings=warnings,
-            ))
-        except Exception as e:
-            results.append(ParsedFile(
-                filename=name, platform=platform, report_type=report_type,
-                error=f"Couldn't read this file as a {platform}/{report_type} report: {e}",
-            ))
+        results.append(parse_with_mapping(name, data, platform, report_type))
     return results

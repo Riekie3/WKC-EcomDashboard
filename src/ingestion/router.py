@@ -56,3 +56,17 @@ def detect(filename: str):
 
 def get_parser(platform: str, report_type: str):
     return PARSERS.get((platform, report_type))
+
+
+def platforms_with_parsers() -> list[str]:
+    """Platforms in a stable, sensible display order (not just set-sorted)."""
+    order = ["shopee", "lazada", "tiktok_shop"]
+    available = {p for p, _ in PARSERS}
+    return [p for p in order if p in available]
+
+
+def available_report_types(platform: str) -> list[str]:
+    """Report types supported for a given platform, for the manual-assignment dropdown."""
+    order = list(REPORT_TYPE_LABELS.keys())
+    available = {rt for p, rt in PARSERS if p == platform}
+    return [rt for rt in order if rt in available]

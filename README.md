@@ -16,7 +16,7 @@ pip install -r requirements.txt
 ## Running
 
 ```bash
-streamlit run app.py
+streamlit run Info.py
 ```
 
 Opens at `http://localhost:8501`.
@@ -73,7 +73,7 @@ JSON field even though most aren't surfaced on a chart yet.
 ## Project layout
 
 ```
-app.py                          # landing page
+Info.py                         # landing page (sidebar nav label: "Info")
 pages/                          # Streamlit pages (Upload, Sales, Product, Ads, Affiliate & Marketing, Data Management)
 src/
   config/schema.py              # canonical field names per fact table

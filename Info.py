@@ -1,9 +1,17 @@
+import os
+
 import streamlit as st
 
 from src.dashboard.branding import apply_logo, render_footer
 
 st.set_page_config(page_title="Sony Ecommerce Dashboard", page_icon="📊", layout="wide")
 apply_logo()
+
+SONY_LOGO_PATH = os.path.join(os.path.dirname(__file__), "assets", "sony_logo.webp")
+if os.path.exists(SONY_LOGO_PATH):
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col2:
+        st.image(SONY_LOGO_PATH, width='stretch')
 
 st.title("Sony Ecommerce Dashboard")
 st.markdown(
