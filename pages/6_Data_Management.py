@@ -4,7 +4,7 @@ import os
 import streamlit as st
 
 from src.ingestion.router import PLATFORM_LABELS, REPORT_TYPE_LABELS
-from src.storage.db import get_session, DEFAULT_DB_PATH
+from src.storage.db import get_session, DEFAULT_DB_PATH, validate_backup, restore_database, erase_database
 from src.storage import repository as repo
 
 st.set_page_config(page_title="Data Management", page_icon="🗑️", layout="wide")
@@ -61,3 +61,29 @@ if os.path.exists(DEFAULT_DB_PATH):
         st.download_button("Download database backup (app.db)", data=f.read(), file_name="app_backup.db")
 else:
     st.caption("No data uploaded yet.")
+
+st.divider()
+st.subheader("Restore from backup")
+st.caption("Upload a previously downloaded app.db backup. This replaces the entire current database -- everything currently in the dashboard that isn't in the backup will be lost.")
+backup_file = st.file_uploader("Backup file (.db)", type=["db"], key="restore_upload")
+if backup_file is not None:
+    ok, msg = validate_backup(backup_file.getvalue())
+    if not ok:
+        st.error(msg)
+    else:
+        st.warning("This will completely replace the current database with the uploaded backup. This cannot be undone.")
+        confirm_restore = st.checkbox("I understand this replaces all current data.", key="confirm_restore")
+        if st.button("Restore this backup", disabled=not confirm_restore, type="primary"):
+            restore_database(backup_file.getvalue())
+            st.success("Database restored from backup.")
+            st.rerun()
+
+st.divider()
+st.subheader("⚠️ Danger zone")
+with st.expander("Erase everything"):
+    st.error("This permanently deletes ALL data in the dashboard (every platform, every report type, every batch). There is no undo -- download a backup first if you're not sure.")
+    typed = st.text_input('Type "ERASE" to confirm', key="erase_confirm_text")
+    if st.button("Erase all data", disabled=typed != "ERASE", type="primary"):
+        erase_database()
+        st.success("All data erased.")
+        st.rerun()

@@ -65,9 +65,10 @@ JSON field even though most aren't surfaced on a chart yet.
 - **Affiliate & Marketing** -- commission-based / creator-driven performance, separate from paid
   CPC ads: per-product affiliate commission (Shopee, TikTok), Shopee's traffic-source-by-product
   breakdown, and TikTok's creator/affiliate leaderboard.
-- **Data Management** -- delete a specific upload batch, delete by date range, or download a
-  backup of the database file. Data is kept indefinitely by default (no automatic deletion) --
-  use this page to correct a bad upload.
+- **Data Management** -- delete a specific upload batch, delete by date range, download a backup
+  of the database file, restore from a previously downloaded backup (replaces all current data --
+  requires confirmation), or erase everything (requires typing "ERASE" to confirm). Data is kept
+  indefinitely by default (no automatic deletion).
 
 ## Project layout
 
