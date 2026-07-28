@@ -65,6 +65,61 @@ def parse_product_performance(path) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+_AFFILIATE_CORE = {"Item id", "Item Name", "Sales(RM)", "Item Sold", "Orders", "Clicks", "Est.Commission(RM)", "ROI"}
+_TRAFFIC_SOURCE_CORE = {
+    "Item ID", "Product", "Sales Ratio", "Sales (MYR)", "Product Impressions", "Product Clicks",
+    "Orders", "Units", "CTR", "Order Conversion Rate", "Buyers",
+}
+_TRAFFIC_SOURCE_SHEETS = {
+    "(placed) Product Traffic": "placed",
+    "(confirmed) Product Traffic": "confirmed",
+    "(paid) Product Traffic": "paid",
+}
+
+
+def parse_affiliate_marketing(path) -> pd.DataFrame:
+    raw = pd.read_csv(path, header=0)
+    raw = raw[raw["Item id"].notna()]
+    rows = []
+    for _, r in raw.iterrows():
+        rows.append({
+            "item_id": str(r["Item id"]),
+            "product_name": r.get("Item Name"),
+            "sales": to_number(r.get("Sales(RM)")),
+            "units_sold": to_number(r.get("Item Sold")),
+            "orders": to_number(r.get("Orders")),
+            "clicks": to_number(r.get("Clicks")),
+            "commission": to_number(r.get("Est.Commission(RM)")),
+            "roi": to_number(r.get("ROI")),
+            "extra_metrics": extras_dict(r, _AFFILIATE_CORE),
+        })
+    return pd.DataFrame(rows)
+
+
+def parse_traffic_source_performance(path) -> pd.DataFrame:
+    rows = []
+    for sheet, stage in _TRAFFIC_SOURCE_SHEETS.items():
+        raw = pd.read_excel(path, sheet_name=sheet, header=0)
+        raw = raw[raw["Item ID"].notna()]
+        for _, r in raw.iterrows():
+            rows.append({
+                "funnel_stage": stage,
+                "item_id": str(r["Item ID"]),
+                "product_name": r.get("Product"),
+                "sales_ratio": to_number(r.get("Sales Ratio")),
+                "sales": to_number(r.get("Sales (MYR)")),
+                "impressions": to_number(r.get("Product Impressions")),
+                "clicks": to_number(r.get("Product Clicks")),
+                "orders": to_number(r.get("Orders")),
+                "units_sold": to_number(r.get("Units")),
+                "ctr": to_number(r.get("CTR")),
+                "conversion_rate": to_number(r.get("Order Conversion Rate")),
+                "buyers": to_number(r.get("Buyers")),
+                "extra_metrics": extras_dict(r, _TRAFFIC_SOURCE_CORE),
+            })
+    return pd.DataFrame(rows)
+
+
 def parse_ads_performance(path) -> pd.DataFrame:
     raw = pd.read_csv(path, header=6)
     raw = raw[raw["Ad Name"].notna()]

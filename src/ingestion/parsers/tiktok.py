@@ -101,6 +101,48 @@ def parse_daily_sales(path) -> pd.DataFrame:
     raise ValueError("Could not find a 'Daily data' or \"Today's data\" section in this TikTok Shop file")
 
 
+_AFFILIATE_CORE = {"Product ID", "Product name", "GMV", "Items sold", "Est. commission"}
+_CREATOR_CORE = {"Creator username", "Affiliate GMV", "Est. commission", "Affiliate orders",
+                  "Product impressions", "CTR", "Affiliate followers"}
+
+
+def parse_affiliate_marketing(path) -> pd.DataFrame:
+    raw = pd.read_excel(path, sheet_name="Sheet 1", header=0)
+    raw = raw[raw["Product ID"].notna()]
+    rows = []
+    for _, r in raw.iterrows():
+        rows.append({
+            "item_id": str(r["Product ID"]),
+            "product_name": r.get("Product name"),
+            "sales": to_number(r.get("GMV")),
+            "units_sold": to_number(r.get("Items sold")),
+            "orders": None,
+            "clicks": None,
+            "commission": to_number(r.get("Est. commission")),
+            "roi": None,
+            "extra_metrics": extras_dict(r, _AFFILIATE_CORE),
+        })
+    return pd.DataFrame(rows)
+
+
+def parse_creator_performance(path) -> pd.DataFrame:
+    raw = pd.read_excel(path, sheet_name="Sheet 1", header=0)
+    raw = raw[raw["Creator username"].notna()]
+    rows = []
+    for _, r in raw.iterrows():
+        rows.append({
+            "creator_username": r.get("Creator username"),
+            "affiliate_gmv": to_number(r.get("Affiliate GMV")),
+            "commission": to_number(r.get("Est. commission")),
+            "orders": to_number(r.get("Affiliate orders")),
+            "impressions": to_number(r.get("Product impressions")),
+            "ctr": to_number(r.get("CTR")),
+            "followers": to_number(r.get("Affiliate followers")),
+            "extra_metrics": extras_dict(r, _CREATOR_CORE),
+        })
+    return pd.DataFrame(rows)
+
+
 def parse_product_performance(path) -> pd.DataFrame:
     raw = pd.read_excel(path, sheet_name="Sheet1", header=None)
     data = raw.iloc[4:]

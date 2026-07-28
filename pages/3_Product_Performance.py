@@ -37,8 +37,8 @@ for platform in platforms:
         fig = px.bar(top_n, x="sales", y="product_name", orientation="h",
                      title="Top sellers by revenue", labels={"sales": "Revenue", "product_name": "Product"})
         fig.update_layout(yaxis={"categoryorder": "total ascending"})
-        st.plotly_chart(fig, use_container_width=True)
+        st.plotly_chart(fig, width='stretch')
 
         cols = ["product_name", "item_id", "sales", "units_sold", "orders", "impressions", "clicks", "ctr"]
         cols = [c for c in cols if c in sub.columns]
-        st.dataframe(sub[cols].sort_values("sales", ascending=False), use_container_width=True, hide_index=True)
+        st.dataframe(sub[cols].sort_values("sales", ascending=False), width='stretch', hide_index=True)

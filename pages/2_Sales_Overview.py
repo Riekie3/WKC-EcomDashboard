@@ -35,16 +35,16 @@ st.caption("Shopee figures above use the Confirmed Order funnel stage.")
 st.subheader("Revenue trend")
 trend = headline_df.groupby(["report_date", "platform_label"], as_index=False)["revenue"].sum()
 fig = px.line(trend, x="report_date", y="revenue", color="platform_label", markers=True)
-st.plotly_chart(fig, use_container_width=True)
+st.plotly_chart(fig, width='stretch')
 
 st.subheader("Platform comparison")
 cmp = headline_df.groupby("platform_label", as_index=False)["revenue"].sum()
 fig2 = px.bar(cmp, x="platform_label", y="revenue")
-st.plotly_chart(fig2, use_container_width=True)
+st.plotly_chart(fig2, width='stretch')
 
 if "shopee" in platforms:
     with st.expander("Shopee: all funnel stages (Placed / Confirmed / Paid)"):
         shopee_df = df[df["platform"] == "shopee"]
         stage_trend = shopee_df.groupby(["report_date", "funnel_stage"], as_index=False)["orders"].sum()
         fig3 = px.line(stage_trend, x="report_date", y="orders", color="funnel_stage", markers=True)
-        st.plotly_chart(fig3, use_container_width=True)
+        st.plotly_chart(fig3, width='stretch')

@@ -42,12 +42,17 @@ export just adds the latest period to the history.
 |---|---|---|---|
 | Daily sales | `net_data_daily_SHP.xlsx` | `net_data_daily_LZD.xls` | `net_data_daily_TT.xlsx` |
 | Product performance | `product_performance_SHP.xlsx` | `product_performance_LZD.xls` | `product_performance_TT.xlsx` |
-| Ads performance | `ads_data_SHP.csv` | `ads_data_LZD.xlsx` | *(not currently exported)* |
+| Ads performance (paid CPC) | `ads_data_SHP.csv` | `ads_data_LZD.xlsx` | *(not currently exported)* |
+| Affiliate / commission marketing | `AMS_SHP.csv` | *(not currently exported)* | `AMS_TT.xlsx` |
+| Traffic-source breakdown by product | `sales_source_SHP.xlsx` | *(not currently exported)* | *(not currently exported)* |
+| Creator / affiliate leaderboard | *(not currently exported)* | *(not currently exported)* | `AMS_TT_Aff.xlsx` |
 
 TikTok's product performance report has ~176 columns; only the core metrics (name, GMV, units
-sold, impressions/clicks/CTR) are ingested in this version -- the rest is intentionally out of
-scope for now. Other platform-specific files (e.g. `AMS_*`, `sales_source_SHP.xlsx`) aren't wired
-up yet.
+sold, impressions/clicks/CTR) are ingested in this version -- the remaining ~166 columns
+(LIVE/video/affiliate segment breakdowns) are intentionally not captured at all yet (not even in
+`extra_metrics`), per the approved "core metrics only" scoping decision. Other parsers' unmapped
+columns (Shopee, Lazada, TikTok's other report types) are captured in each row's `extra_metrics`
+JSON field even though most aren't surfaced on a chart yet.
 
 ## Dashboard pages
 
@@ -57,6 +62,9 @@ up yet.
 - **Product Performance** -- top sellers by revenue per platform, from the latest uploaded batch.
 - **Ads Performance** -- daily spend/ROAS for platforms that report it as a time series (Lazada),
   and campaign-level tables for platforms that report it per campaign (Shopee).
+- **Affiliate & Marketing** -- commission-based / creator-driven performance, separate from paid
+  CPC ads: per-product affiliate commission (Shopee, TikTok), Shopee's traffic-source-by-product
+  breakdown, and TikTok's creator/affiliate leaderboard.
 - **Data Management** -- delete a specific upload batch, delete by date range, or download a
   backup of the database file. Data is kept indefinitely by default (no automatic deletion) --
   use this page to correct a bad upload.
@@ -65,7 +73,7 @@ up yet.
 
 ```
 app.py                          # landing page
-pages/                          # Streamlit pages (Upload, Sales, Product, Ads, Data Management)
+pages/                          # Streamlit pages (Upload, Sales, Product, Ads, Affiliate & Marketing, Data Management)
 src/
   config/schema.py              # canonical field names per fact table
   ingestion/
@@ -74,7 +82,8 @@ src/
     pipeline.py                 # zip expansion, parsing, validation for the Upload page
     parsers/{shopee,lazada,tiktok}.py   # one parser per platform, per real report structure
   storage/
-    models.py                   # SQLAlchemy models (daily_sales, product_performance, ads_performance, upload_batches)
+    models.py                   # SQLAlchemy models (daily_sales, product_performance, ads_performance,
+                                 #   affiliate_marketing, traffic_source_performance, creator_performance, upload_batches)
     db.py                       # SQLite engine/session
     repository.py                # insert/query/delete helpers
 data/app.db                     # SQLite database (created on first run, not committed)

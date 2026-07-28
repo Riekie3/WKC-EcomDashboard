@@ -83,8 +83,56 @@ class AdsPerformance(Base, _BatchMixin):
     extra_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
+class AffiliateMarketing(Base, _BatchMixin):
+    __tablename__ = "affiliate_marketing"
+
+    item_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    product_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    sales: Mapped[float | None] = mapped_column(Float, nullable=True)
+    units_sold: Mapped[float | None] = mapped_column(Float, nullable=True)
+    orders: Mapped[float | None] = mapped_column(Float, nullable=True)
+    clicks: Mapped[float | None] = mapped_column(Float, nullable=True)
+    commission: Mapped[float | None] = mapped_column(Float, nullable=True)
+    roi: Mapped[float | None] = mapped_column(Float, nullable=True)
+    extra_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+
+class TrafficSourcePerformance(Base, _BatchMixin):
+    __tablename__ = "traffic_source_performance"
+
+    funnel_stage: Mapped[str] = mapped_column(String, default="na")
+    item_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    product_name: Mapped[str | None] = mapped_column(String, nullable=True)
+    sales_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sales: Mapped[float | None] = mapped_column(Float, nullable=True)
+    impressions: Mapped[float | None] = mapped_column(Float, nullable=True)
+    clicks: Mapped[float | None] = mapped_column(Float, nullable=True)
+    orders: Mapped[float | None] = mapped_column(Float, nullable=True)
+    units_sold: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ctr: Mapped[float | None] = mapped_column(Float, nullable=True)
+    conversion_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    buyers: Mapped[float | None] = mapped_column(Float, nullable=True)
+    extra_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+
+class CreatorPerformance(Base, _BatchMixin):
+    __tablename__ = "creator_performance"
+
+    creator_username: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    affiliate_gmv: Mapped[float | None] = mapped_column(Float, nullable=True)
+    commission: Mapped[float | None] = mapped_column(Float, nullable=True)
+    orders: Mapped[float | None] = mapped_column(Float, nullable=True)
+    impressions: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ctr: Mapped[float | None] = mapped_column(Float, nullable=True)
+    followers: Mapped[float | None] = mapped_column(Float, nullable=True)
+    extra_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+
 FACT_TABLES = {
     "daily_sales": DailySales,
     "product_performance": ProductPerformance,
     "ads_performance": AdsPerformance,
+    "affiliate_marketing": AffiliateMarketing,
+    "traffic_source_performance": TrafficSourcePerformance,
+    "creator_performance": CreatorPerformance,
 }

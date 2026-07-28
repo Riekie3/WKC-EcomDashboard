@@ -50,5 +50,47 @@ ADS_PERFORMANCE_FIELDS = [
     "extra_metrics",
 ]
 
+AFFILIATE_MARKETING_FIELDS = [
+    "item_id",
+    "product_name",
+    "sales",
+    "units_sold",
+    "orders",
+    "clicks",
+    "commission",
+    "roi",
+    "extra_metrics",
+]
+
+TRAFFIC_SOURCE_FIELDS = [
+    "funnel_stage",
+    "item_id",
+    "product_name",
+    "sales_ratio",
+    "sales",
+    "impressions",
+    "clicks",
+    "orders",
+    "units_sold",
+    "ctr",
+    "conversion_rate",
+    "buyers",
+    "extra_metrics",
+]
+
+CREATOR_PERFORMANCE_FIELDS = [
+    "creator_username",
+    "affiliate_gmv",
+    "commission",
+    "orders",
+    "impressions",
+    "ctr",
+    "followers",
+    "extra_metrics",
+]
+
 PLATFORMS = ["shopee", "lazada", "tiktok_shop"]
-REPORT_TYPES = ["daily_sales", "product_performance", "ads_performance"]
+REPORT_TYPES = [
+    "daily_sales", "product_performance", "ads_performance",
+    "affiliate_marketing", "traffic_source_performance", "creator_performance",
+]

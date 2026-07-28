@@ -43,7 +43,7 @@ if uploaded:
                 for w in r.warnings:
                     st.warning(w)
             st.caption(f"{len(r.df)} rows parsed")
-            st.dataframe(r.df.head(20), use_container_width=True)
+            st.dataframe(r.df.head(20), width='stretch')
 
     if ok_results:
         st.subheader("Ready to save")

@@ -10,6 +10,9 @@ REQUIRED_FIELDS = {
     "daily_sales": ["report_date"],
     "product_performance": ["item_id"],
     "ads_performance": [],
+    "affiliate_marketing": ["item_id"],
+    "traffic_source_performance": ["item_id"],
+    "creator_performance": ["creator_username"],
 }
 
 

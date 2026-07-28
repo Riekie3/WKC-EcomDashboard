@@ -20,7 +20,7 @@ else:
     show = batches.copy()
     show["platform"] = show["platform"].map(PLATFORM_LABELS)
     show["report_type"] = show["report_type"].map(REPORT_TYPE_LABELS)
-    st.dataframe(show, use_container_width=True, hide_index=True)
+    st.dataframe(show, width='stretch', hide_index=True)
 
     st.markdown("**Delete a single upload batch**")
     batch_options = {f"{r.uploaded_at:%Y-%m-%d %H:%M} — {PLATFORM_LABELS.get(r.platform, r.platform)} — {REPORT_TYPE_LABELS.get(r.report_type, r.report_type)} — {r.source_filename}": r.id

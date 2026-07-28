@@ -38,7 +38,7 @@ if not daily.empty:
 
     trend = daily.groupby(["report_date", "platform_label"], as_index=False)[["spend", "revenue"]].sum()
     fig = px.line(trend, x="report_date", y="spend", color="platform_label", markers=True, title="Daily spend")
-    st.plotly_chart(fig, use_container_width=True)
+    st.plotly_chart(fig, width='stretch')
 
 if not campaigns.empty:
     st.subheader("Campaign / product-level ads (platforms reporting per-campaign totals)")
@@ -49,5 +49,5 @@ if not campaigns.empty:
         cols = [c for c in cols if c in sub.columns]
         st.dataframe(
             sub[cols].sort_values("spend", ascending=False),
-            use_container_width=True, hide_index=True,
+            width='stretch', hide_index=True,
         )
