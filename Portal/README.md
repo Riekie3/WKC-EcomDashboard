@@ -18,6 +18,12 @@ pip install -r requirements.txt
 streamlit run Home.py
 ```
 
+Defaults to `http://localhost:8501` (Streamlit's default port). If running this alongside
+SonyDashboard locally at the same time, give this one a different port explicitly:
+```bash
+streamlit run Home.py --server.port 8500
+```
+
 ## Adding a new brand
 
 Edit `brands.py` -- add one entry to the `BRANDS` list:
