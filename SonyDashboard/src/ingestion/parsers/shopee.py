@@ -4,7 +4,7 @@ real sample exports -- see the plan doc for the raw structure notes.
 """
 import pandas as pd
 
-from src.ingestion.transforms import to_number, parse_date, extras_dict
+from src.ingestion.transforms import to_number, parse_date, extras_dict, require_columns
 
 _DAILY_STAGE_SHEETS = {
     "Placed Order": "placed",
@@ -28,6 +28,7 @@ def parse_daily_sales(path) -> pd.DataFrame:
     rows = []
     for sheet, stage in _DAILY_STAGE_SHEETS.items():
         raw = pd.read_excel(path, sheet_name=sheet, header=3)
+        require_columns(raw.columns, _DAILY_CORE, f"Shopee daily sales ({sheet})")
         raw = raw[raw["Date"].astype(str).str.match(r"^\d{2}-\d{2}-\d{4}$", na=False)]
         for _, r in raw.iterrows():
             rows.append({
@@ -45,6 +46,7 @@ def parse_daily_sales(path) -> pd.DataFrame:
 
 def parse_product_performance(path) -> pd.DataFrame:
     raw = pd.read_excel(path, sheet_name="Top Performing Products", header=0)
+    require_columns(raw.columns, _PRODUCT_CORE, "Shopee product performance")
     raw = raw[raw["Item ID"].notna()]
     rows = []
     for _, r in raw.iterrows():
@@ -79,6 +81,7 @@ _TRAFFIC_SOURCE_SHEETS = {
 
 def parse_affiliate_marketing(path) -> pd.DataFrame:
     raw = pd.read_csv(path, header=0)
+    require_columns(raw.columns, _AFFILIATE_CORE, "Shopee affiliate marketing")
     raw = raw[raw["Item id"].notna()]
     rows = []
     for _, r in raw.iterrows():
@@ -100,6 +103,7 @@ def parse_traffic_source_performance(path) -> pd.DataFrame:
     rows = []
     for sheet, stage in _TRAFFIC_SOURCE_SHEETS.items():
         raw = pd.read_excel(path, sheet_name=sheet, header=0)
+        require_columns(raw.columns, _TRAFFIC_SOURCE_CORE, f"Shopee traffic source ({sheet})")
         raw = raw[raw["Item ID"].notna()]
         for _, r in raw.iterrows():
             rows.append({
@@ -122,6 +126,7 @@ def parse_traffic_source_performance(path) -> pd.DataFrame:
 
 def parse_ads_performance(path) -> pd.DataFrame:
     raw = pd.read_csv(path, header=6)
+    require_columns(raw.columns, _ADS_CORE, "Shopee ads performance")
     raw = raw[raw["Ad Name"].notna()]
     rows = []
     for _, r in raw.iterrows():

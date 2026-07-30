@@ -4,16 +4,17 @@ once xlrd is installed).
 """
 import pandas as pd
 
-from src.ingestion.transforms import to_number, parse_date, extras_dict
+from src.ingestion.transforms import to_number, parse_date, extras_dict, require_columns
 
 _DAILY_CORE = {"Date", "Revenue", "Orders", "Visitors", "Buyers"}
-_PRODUCT_CORE = {"Product ID", "Product Name", "Revenue", "Orders", "Units Sold",
+_PRODUCT_CORE = {"Product ID", "Product Name", "Revenue", "Orders", "Units Sold", "SKU ID",
                   "Product Visitors", "Product Pageviews", "Conversion Rate"}
 _ADS_CORE = {"Date", "Spend", "Revenue", "Orders", "ROAS", "Impression", "Clicks", "CPC", "Cost Per Order"}
 
 
 def parse_daily_sales(path) -> pd.DataFrame:
     raw = pd.read_excel(path, sheet_name="Key Metrics", header=5)
+    require_columns(raw.columns, _DAILY_CORE, "Lazada daily sales")
     raw = raw[raw["Date"].astype(str).str.match(r"^\d{4}-\d{2}-\d{2}$", na=False)]
     rows = []
     for _, r in raw.iterrows():
@@ -32,6 +33,7 @@ def parse_daily_sales(path) -> pd.DataFrame:
 
 def parse_product_performance(path) -> pd.DataFrame:
     raw = pd.read_excel(path, sheet_name="Product", header=5)
+    require_columns(raw.columns, _PRODUCT_CORE, "Lazada product performance")
     raw = raw[raw["Product ID"].notna()]
     # keep only the product-level rollup rows (SKU ID == '-'), not the per-SKU-variant breakdown rows,
     # to match one-row-per-product granularity used by Shopee/TikTok's core product performance table
@@ -57,6 +59,7 @@ def parse_product_performance(path) -> pd.DataFrame:
 
 def parse_ads_performance(path) -> pd.DataFrame:
     raw = pd.read_excel(path, sheet_name="Sheet0", header=0)
+    require_columns(raw.columns, _ADS_CORE, "Lazada ads performance")
     raw = raw[raw["Date"].notna()]
     rows = []
     for _, r in raw.iterrows():

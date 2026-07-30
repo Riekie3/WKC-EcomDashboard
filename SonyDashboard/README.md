@@ -42,6 +42,14 @@ preview -- review the row counts and any warnings, then click **Confirm & Save t
 commit them. Data accumulates across uploads (nothing is overwritten), so re-uploading a fresh
 export just adds the latest period to the history.
 
+**If a platform changes its export format** (renames, removes, or reorders a column), every
+parser checks the file's actual columns against what it expects *before* extracting any data,
+and fails with a clear "columns not found" error rather than silently saving wrong or empty
+values -- this applies even to TikTok's product performance file, which reads columns by
+position rather than name (the one place a reordered column couldn't otherwise raise an error
+at all). A failed file is never added to the dashboard; fix the mismatch (or ask me to update
+the parser for the new format) and re-upload.
+
 ### Supported report types (per platform)
 
 | Report type | Shopee | Lazada | TikTok Shop |

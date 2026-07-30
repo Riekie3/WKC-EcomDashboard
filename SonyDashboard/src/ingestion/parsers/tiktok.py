@@ -14,7 +14,7 @@ is no parse_ads_performance here -- the filename router simply has nothing to ma
 """
 import pandas as pd
 
-from src.ingestion.transforms import to_number, parse_date, extras_dict
+from src.ingestion.transforms import to_number, parse_date, extras_dict, require_columns, require_header_positions
 
 _DAILY_CORE = {"GMV", "Orders", "Customers", "Items sold"}
 
@@ -28,6 +28,20 @@ _PRODUCT_CORE_IDX = {
     "impressions": 24,
     "clicks": 25,
     "ctr": 26,
+}
+
+# Expected header text at each position we read by index -- this file has no usable column
+# names for pandas to match against (two-level segment/metric header), so unlike every other
+# parser here, a reordered column wouldn't raise a KeyError on its own. This is checked instead.
+_PRODUCT_HEADER_TEXT = {
+    0: "Product Name",
+    1: "Product ID",
+    4: "GMV",
+    19: "Orders",
+    21: "Items sold",
+    24: "Product impressions",
+    25: "Product clicks",
+    26: "CTR",
 }
 
 
@@ -59,6 +73,7 @@ def parse_daily_sales(path) -> pd.DataFrame:
 
     if daily_row is not None:
         data = _extract_block(raw_all, daily_row + 1)
+        require_columns(data.columns, _DAILY_CORE, "TikTok Shop daily sales (Daily data)")
         rows = []
         for _, r in data.iterrows():
             d = parse_date(r.iloc[0])
@@ -80,6 +95,7 @@ def parse_daily_sales(path) -> pd.DataFrame:
         data = _extract_block(raw_all, today_row + 1)
         if data.empty:
             return pd.DataFrame([])
+        require_columns(data.columns, _DAILY_CORE, "TikTok Shop daily sales (Today's data)")
         dates = data.iloc[:, 0].apply(parse_date)
         d = next((x for x in dates if x is not None), None)
         if d is None:
@@ -108,6 +124,7 @@ _CREATOR_CORE = {"Creator username", "Affiliate GMV", "Est. commission", "Affili
 
 def parse_affiliate_marketing(path) -> pd.DataFrame:
     raw = pd.read_excel(path, sheet_name="Sheet 1", header=0)
+    require_columns(raw.columns, _AFFILIATE_CORE, "TikTok Shop affiliate marketing")
     raw = raw[raw["Product ID"].notna()]
     rows = []
     for _, r in raw.iterrows():
@@ -127,6 +144,7 @@ def parse_affiliate_marketing(path) -> pd.DataFrame:
 
 def parse_creator_performance(path) -> pd.DataFrame:
     raw = pd.read_excel(path, sheet_name="Sheet 1", header=0)
+    require_columns(raw.columns, _CREATOR_CORE, "TikTok Shop creator performance")
     raw = raw[raw["Creator username"].notna()]
     rows = []
     for _, r in raw.iterrows():
@@ -145,6 +163,8 @@ def parse_creator_performance(path) -> pd.DataFrame:
 
 def parse_product_performance(path) -> pd.DataFrame:
     raw = pd.read_excel(path, sheet_name="Sheet1", header=None)
+    header_row = raw.iloc[3].tolist()
+    require_header_positions(header_row, _PRODUCT_HEADER_TEXT, "TikTok Shop product performance")
     data = raw.iloc[4:]
     data = data[data[_PRODUCT_CORE_IDX["product_id"]].notna()]
     rows = []
