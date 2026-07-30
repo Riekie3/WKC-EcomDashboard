@@ -16,7 +16,11 @@ import pandas as pd
 
 from src.ingestion.transforms import to_number, parse_date, extras_dict, require_columns, require_header_positions
 
-_DAILY_CORE = {"GMV", "Orders", "Customers", "Items sold"}
+_DAILY_CORE = {"GMV", "Orders", "Customers", "Items sold", "Items refunded"}
+
+
+def _or_zero(v):
+    return 0.0 if v is None or (isinstance(v, float) and pd.isna(v)) else v
 
 # column positions (0-indexed) of the core "All"-segment metrics in product_performance_TT.xlsx
 _PRODUCT_CORE_IDX = {
@@ -79,10 +83,12 @@ def parse_daily_sales(path) -> pd.DataFrame:
             d = parse_date(r.iloc[0])
             if d is None:
                 continue
+            # true revenue = GMV minus refunded items' value, per confirmed business rule
+            revenue = _or_zero(to_number(r.get("GMV"))) - _or_zero(to_number(r.get("Items refunded")))
             rows.append({
                 "funnel_stage": "na",
                 "report_date": d,
-                "revenue": to_number(r.get("GMV")),
+                "revenue": revenue,
                 "orders": to_number(r.get("Orders")),
                 "units_sold": to_number(r.get("Items sold")),
                 "visitors": None,
@@ -102,10 +108,12 @@ def parse_daily_sales(path) -> pd.DataFrame:
             return pd.DataFrame([])
         numeric_cols = [c for c in data.columns if c != data.columns[0]]
         agg = {c: data[c].apply(to_number).sum(min_count=1) for c in numeric_cols}
+        # true revenue = GMV minus refunded items' value, per confirmed business rule
+        revenue = _or_zero(agg.get("GMV")) - _or_zero(agg.get("Items refunded"))
         row = {
             "funnel_stage": "na",
             "report_date": d,
-            "revenue": agg.get("GMV"),
+            "revenue": revenue,
             "orders": agg.get("Orders"),
             "units_sold": agg.get("Items sold"),
             "visitors": None,
