@@ -81,10 +81,13 @@ JSON field even though most aren't surfaced on a chart yet.
   breakdown, and TikTok's creator/affiliate leaderboard.
 - **Returns & Refunds** -- gross vs. net breakdown wherever a platform's report exposes a
   cancellation/refund figure, instead of that figure only disappearing into the revenue
-  subtraction: Lazada and TikTok Shop daily sales, plus TikTok Shop's product, affiliate, and
-  creator reports. Shopee's reports don't include a cancellation/refund breakdown at all, so
-  Shopee never appears here. Revenue/sales fields elsewhere in the dashboard are always net
-  (gross minus refunds/cancellations) -- this page is where the subtracted amount is still visible.
+  subtraction: daily sales for all three platforms, plus TikTok Shop's product, affiliate, and
+  creator reports (Shopee/Lazada don't expose a refund breakdown at the product/affiliate level).
+  Revenue/sales elsewhere in the dashboard is net (gross minus refunds/cancellations) for Lazada
+  and TikTok Shop -- **except Shopee, which is kept gross everywhere else**, confirmed against
+  staff's own dashboard (their number doesn't subtract Cancelled/Returned Sales either). Shopee's
+  Cancelled/Returned figures are still shown on this page for visibility, but its "net" here will
+  not match its Total Revenue on Sales Overview -- that's intentional, not a bug.
 - **Data Management** -- delete a specific upload batch, delete by date range, download a backup
   (a `.zip` containing every table's data as JSON -- works the same regardless of whether the live
   database is SQLite or Postgres), restore from a previously downloaded backup (replaces all

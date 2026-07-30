@@ -12,7 +12,8 @@ _DAILY_STAGE_SHEETS = {
     "Paid Order": "paid",
 }
 
-_DAILY_CORE = {"Date", "Sales (MYR)", "Orders", "Visitors", "# of buyers"}
+_DAILY_CORE = {"Date", "Sales (MYR)", "Orders", "Visitors", "# of buyers",
+                "Cancelled Sales", "Returned/Refunded Sales"}
 _PRODUCT_CORE = {
     "Item ID", "Product", "Sales (Confirmed Order) (MYR)", "Confirmed Order",
     "Units (Confirmed Order)", "Product Impression", "Product Clicks", "CTR",
@@ -31,14 +32,24 @@ def parse_daily_sales(path) -> pd.DataFrame:
         require_columns(raw.columns, _DAILY_CORE, f"Shopee daily sales ({sheet})")
         raw = raw[raw["Date"].astype(str).str.match(r"^\d{2}-\d{2}-\d{4}$", na=False)]
         for _, r in raw.iterrows():
+            # Confirmed against staff's own dashboard: Shopee's headline revenue is the raw
+            # "Sales (MYR)" figure and does NOT subtract Cancelled Sales / Returned-Refunded
+            # Sales (unlike Lazada/TikTok) -- kept as gross here. Those two figures are still
+            # captured (gross_revenue/refund_amount) purely for visibility on the Returns &
+            # Refunds page; they intentionally do not change "revenue" itself.
+            gross_revenue = to_number(r["Sales (MYR)"]) or 0.0
+            cancelled = to_number(r.get("Cancelled Sales")) or 0.0
+            returned = to_number(r.get("Returned/Refunded Sales")) or 0.0
             rows.append({
                 "funnel_stage": stage,
                 "report_date": parse_date(r["Date"]),
-                "revenue": to_number(r["Sales (MYR)"]),
+                "revenue": gross_revenue,
                 "orders": to_number(r["Orders"]),
                 "units_sold": None,
                 "visitors": to_number(r["Visitors"]),
                 "buyers": to_number(r["# of buyers"]),
+                "gross_revenue": gross_revenue,
+                "refund_amount": cancelled + returned,
                 "extra_metrics": extras_dict(r, _DAILY_CORE),
             })
     return pd.DataFrame(rows)

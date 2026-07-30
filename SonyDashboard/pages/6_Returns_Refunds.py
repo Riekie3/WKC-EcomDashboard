@@ -12,10 +12,13 @@ apply_logo()
 st.title("↩️ Returns & Refunds")
 st.caption(
     "Gross vs. net figures broken out separately here, instead of only disappearing into the "
-    "revenue subtraction on the other pages. Only platforms/reports that expose a refund or "
-    "cancellation figure are shown -- currently Lazada and TikTok Shop daily sales, and TikTok "
-    "Shop's product, affiliate, and creator reports. Shopee's reports don't include a "
-    "cancellation/refund breakdown."
+    "revenue subtraction on the other pages. Covers daily sales for all three platforms, plus "
+    "TikTok Shop's product, affiliate, and creator reports (Shopee/Lazada don't expose a refund "
+    "breakdown at that level). **Note on Shopee:** its Total Revenue elsewhere in the dashboard "
+    "is intentionally gross -- confirmed against staff's own dashboard, which does not subtract "
+    "Cancelled/Returned Sales. The 'Net Revenue' below is shown for Shopee anyway so the refund "
+    "figures are visible, but it will not match Shopee's Total Revenue on Sales Overview -- that's "
+    "expected, not a bug."
 )
 
 platforms, start_date, end_date = sidebar_filters()
