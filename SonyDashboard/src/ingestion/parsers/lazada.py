@@ -6,7 +6,7 @@ import pandas as pd
 
 from src.ingestion.transforms import to_number, parse_date, extras_dict, require_columns
 
-_DAILY_CORE = {"Date", "Revenue", "Orders", "Visitors", "Buyers"}
+_DAILY_CORE = {"Date", "Revenue", "Orders", "Visitors", "Buyers", "Cancelled Amount", "Return/Refund Amount"}
 _PRODUCT_CORE = {"Product ID", "Product Name", "Revenue", "Orders", "Units Sold", "SKU ID",
                   "Product Visitors", "Product Pageviews", "Conversion Rate"}
 _ADS_CORE = {"Date", "Spend", "Revenue", "Orders", "ROAS", "Impression", "Clicks", "CPC", "Cost Per Order"}
@@ -18,10 +18,17 @@ def parse_daily_sales(path) -> pd.DataFrame:
     raw = raw[raw["Date"].astype(str).str.match(r"^\d{4}-\d{2}-\d{2}$", na=False)]
     rows = []
     for _, r in raw.iterrows():
+        # Lazada's "Revenue" column is gross (includes cancelled/returned orders) --
+        # net revenue (what staff's own dashboard reports) subtracts both, confirmed
+        # against a real June 2026 export (gross 14,171.61 -> net 11,484.33, matching
+        # staff's figure to the cent).
+        gross_revenue = to_number(r["Revenue"]) or 0.0
+        cancelled = to_number(r.get("Cancelled Amount")) or 0.0
+        returned = to_number(r.get("Return/Refund Amount")) or 0.0
         rows.append({
             "funnel_stage": "na",
             "report_date": parse_date(r["Date"]),
-            "revenue": to_number(r["Revenue"]),
+            "revenue": gross_revenue - cancelled - returned,
             "orders": to_number(r["Orders"]),
             "units_sold": to_number(r.get("Units Sold")),
             "visitors": to_number(r["Visitors"]),
