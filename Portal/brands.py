@@ -32,10 +32,11 @@ BRANDS = [
     },
     {
         "name": "Tefal",
-        "logo": None,
+        "logo": _asset("tefal_logo.svg"),
         "url_local": None,
         "url_public": None,
         "status": "coming_soon",
+        "badge": "Coming real soon",
     },
     {
         "name": "3M",

@@ -64,6 +64,12 @@ st.markdown(
         text-transform: uppercase;
         color: #666;
     }
+    .brand-tile.soon img {
+        max-width: 70%;
+        max-height: 60%;
+        object-fit: contain;
+        opacity: 0.55;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -80,15 +86,33 @@ for row in rows:
     for col, brand in zip(cols, row):
         with col:
             url = resolve_url(brand)
-            if brand["status"] == "live" and brand["logo"] and url and os.path.exists(brand["logo"]):
+            has_logo = brand["logo"] and os.path.exists(brand["logo"])
+            badge = brand.get("badge", "Coming soon")
+            if brand["status"] == "live" and has_logo and url:
                 with open(brand["logo"], "rb") as f:
                     b64 = base64.b64encode(f.read()).decode()
                 ext = os.path.splitext(brand["logo"])[1].lstrip(".")
+                mime = "svg+xml" if ext == "svg" else ext
                 st.markdown(
                     f"""
                     <a class="brand-tile live" href="{url}" target="_blank" title="Open {brand['name']} dashboard">
-                        <img src="data:image/{ext};base64,{b64}" alt="{brand['name']}">
+                        <img src="data:image/{mime};base64,{b64}" alt="{brand['name']}">
                     </a>
+                    """,
+                    unsafe_allow_html=True,
+                )
+            elif has_logo:
+                # coming soon, but with a logo to show which brand it is -- not a link yet
+                with open(brand["logo"], "rb") as f:
+                    b64 = base64.b64encode(f.read()).decode()
+                ext = os.path.splitext(brand["logo"])[1].lstrip(".")
+                mime = "svg+xml" if ext == "svg" else ext
+                st.markdown(
+                    f"""
+                    <div class="brand-tile soon">
+                        <img src="data:image/{mime};base64,{b64}" alt="{brand['name']}">
+                        <div class="brand-badge">{badge}</div>
+                    </div>
                     """,
                     unsafe_allow_html=True,
                 )
@@ -97,7 +121,7 @@ for row in rows:
                     f"""
                     <div class="brand-tile soon">
                         <div class="brand-name">{brand['name']}</div>
-                        <div class="brand-badge">Coming soon</div>
+                        <div class="brand-badge">{badge}</div>
                     </div>
                     """,
                     unsafe_allow_html=True,
