@@ -45,9 +45,18 @@ def _add_missing_columns(engine):
 
 def get_engine(database_url: str | None = None):
     database_url = database_url or get_database_url()
-    connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
     if database_url.startswith("sqlite"):
         os.makedirs(os.path.dirname(DEFAULT_DB_PATH), exist_ok=True)
+        connect_args = {"check_same_thread": False}
+    else:
+        # Supabase's connection-pooler URL runs PgBouncer in transaction-pooling mode,
+        # which reassigns the underlying Postgres connection between transactions --
+        # psycopg's server-side prepared statements are cached per that underlying
+        # connection, so a prepared-statement name can collide with a different query
+        # already prepared under it on whichever connection the pooler hands back
+        # (psycopg.errors.DuplicatePreparedStatement). Disabling server-side prepare
+        # avoids this; it's unrelated to any schema/data issue.
+        connect_args = {"prepare_threshold": None}
     engine = create_engine(database_url, connect_args=connect_args)
     Base.metadata.create_all(engine)
     _add_missing_columns(engine)
