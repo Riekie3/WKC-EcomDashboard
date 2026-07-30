@@ -27,6 +27,9 @@ session = get_session()
 st.subheader("Daily sales: gross vs. net")
 daily = repo.query_df(session, "daily_sales", platforms=platforms, start_date=start_date, end_date=end_date)
 session.close()
+# Shopee reports three funnel stages per day (Placed/Confirmed/Paid) -- summing all three
+# here would triple-count it, so keep only Confirmed Order, matching Sales Overview's headline
+daily = daily[(daily["platform"] != "shopee") | (daily["funnel_stage"] == "confirmed")] if not daily.empty else daily
 daily = daily[daily["gross_revenue"].notna()] if not daily.empty else daily
 
 if daily.empty:
