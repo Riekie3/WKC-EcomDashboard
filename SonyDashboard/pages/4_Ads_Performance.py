@@ -17,6 +17,8 @@ session = get_session()
 # loaded without a DB-level date filter: Shopee's campaign rows have no report_date (they're
 # keyed by campaign start/end instead), so filtering at the query level would silently drop them
 df = repo.query_df(session, "ads_performance", platforms=platforms)
+session.close()  # release this read transaction now -- on Postgres an unclosed session
+                  # holds its locks until GC'd, which can block later DDL like erase_database()
 
 if df.empty:
     st.info("No ads performance data for this selection yet. Upload data on the Upload Data page (or note TikTok Shop has no CPC ads report in the current export bundle).")

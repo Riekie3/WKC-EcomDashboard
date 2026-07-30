@@ -25,6 +25,8 @@ def _latest_batch_only(df):
 
 st.subheader("Affiliate / commission performance by product")
 aff = repo.query_df(session, "affiliate_marketing", platforms=platforms)
+session.close()  # release each read transaction now -- on Postgres an unclosed session
+                  # holds its locks until GC'd, which can block later DDL like erase_database()
 if aff.empty:
     st.info("No affiliate marketing data yet (upload AMS_SHP.csv or AMS_TT.xlsx on the Upload Data page).")
 else:
@@ -45,6 +47,7 @@ else:
 st.divider()
 st.subheader("Shopee: traffic-source breakdown by product")
 traffic = repo.query_df(session, "traffic_source_performance", platforms=[p for p in platforms if p == "shopee"])
+session.close()
 if traffic.empty:
     st.info("No traffic-source data yet (upload sales_source_SHP.xlsx on the Upload Data page).")
 else:
@@ -63,6 +66,7 @@ else:
 st.divider()
 st.subheader("TikTok Shop: creator / affiliate leaderboard")
 creators = repo.query_df(session, "creator_performance", platforms=[p for p in platforms if p == "tiktok_shop"])
+session.close()
 if creators.empty:
     st.info("No creator performance data yet (upload AMS_TT_Aff.xlsx on the Upload Data page).")
 else:

@@ -17,6 +17,10 @@ session = get_session()
 
 st.subheader("Upload history")
 batches = repo.list_upload_batches(session)
+# Close the read transaction immediately -- on Postgres it otherwise stays open (holding
+# a lock on upload_batches) for the rest of this script run, which blocks the DROP TABLE
+# in erase_database() below from ever completing. Harmless no-op on SQLite.
+session.close()
 if batches.empty:
     st.info("No uploads yet.")
 else:
@@ -49,6 +53,7 @@ if start_date > end_date:
     st.error("Start date must be before end date.")
 else:
     affected = repo.count_affected_by_date_range(session, start_date, end_date, selected_platforms)
+    session.close()  # same reason as above -- release this read transaction's locks immediately
     st.write(f"This will delete **{affected}** row(s) between **{start_date}** and **{end_date}**.")
     confirm = st.checkbox("I understand this cannot be undone.")
     if st.button("Delete rows in this range", disabled=not confirm or affected == 0, type="primary"):

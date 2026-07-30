@@ -15,6 +15,8 @@ platforms, start_date, end_date = sidebar_filters()
 session = get_session()
 
 df = repo.query_df(session, "daily_sales", platforms=platforms, start_date=start_date, end_date=end_date)
+session.close()  # release this read transaction now -- on Postgres an unclosed session
+                  # holds its locks until GC'd, which can block later DDL like erase_database()
 
 if df.empty:
     st.info("No sales data for this selection yet. Upload data on the Upload Data page.")

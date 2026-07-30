@@ -16,6 +16,8 @@ st.caption("Product performance reports don't carry a per-row date, so the date 
 session = get_session()
 
 df = repo.query_df(session, "product_performance", platforms=platforms)
+session.close()  # release this read transaction now -- on Postgres an unclosed session
+                  # holds its locks until GC'd, which can block later DDL like erase_database()
 
 if df.empty:
     st.info("No product performance data for this selection yet. Upload data on the Upload Data page.")
