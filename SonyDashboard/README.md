@@ -79,6 +79,12 @@ JSON field even though most aren't surfaced on a chart yet.
 - **Affiliate & Marketing** -- commission-based / creator-driven performance, separate from paid
   CPC ads: per-product affiliate commission (Shopee, TikTok), Shopee's traffic-source-by-product
   breakdown, and TikTok's creator/affiliate leaderboard.
+- **Returns & Refunds** -- gross vs. net breakdown wherever a platform's report exposes a
+  cancellation/refund figure, instead of that figure only disappearing into the revenue
+  subtraction: Lazada and TikTok Shop daily sales, plus TikTok Shop's product, affiliate, and
+  creator reports. Shopee's reports don't include a cancellation/refund breakdown at all, so
+  Shopee never appears here. Revenue/sales fields elsewhere in the dashboard are always net
+  (gross minus refunds/cancellations) -- this page is where the subtracted amount is still visible.
 - **Data Management** -- delete a specific upload batch, delete by date range, download a backup
   (a `.zip` containing every table's data as JSON -- works the same regardless of whether the live
   database is SQLite or Postgres), restore from a previously downloaded backup (replaces all

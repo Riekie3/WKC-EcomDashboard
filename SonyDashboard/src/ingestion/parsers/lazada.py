@@ -33,6 +33,8 @@ def parse_daily_sales(path) -> pd.DataFrame:
             "units_sold": to_number(r.get("Units Sold")),
             "visitors": to_number(r["Visitors"]),
             "buyers": to_number(r["Buyers"]),
+            "gross_revenue": gross_revenue,
+            "refund_amount": cancelled + returned,
             "extra_metrics": extras_dict(r, _DAILY_CORE),
         })
     return pd.DataFrame(rows)

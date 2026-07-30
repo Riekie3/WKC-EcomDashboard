@@ -29,6 +29,7 @@ _PRODUCT_CORE_IDX = {
     "gmv": 4,
     "orders": 19,
     "items_sold": 21,
+    "refunds": 40,  # monetary refund value -- NOT "Items refunded" (idx 41), which is a unit count
     "impressions": 24,
     "clicks": 25,
     "ctr": 26,
@@ -46,6 +47,7 @@ _PRODUCT_HEADER_TEXT = {
     24: "Product impressions",
     25: "Product clicks",
     26: "CTR",
+    40: "Refunds",
 }
 
 
@@ -84,15 +86,18 @@ def parse_daily_sales(path) -> pd.DataFrame:
             if d is None:
                 continue
             # true revenue = GMV minus refunded items' value, per confirmed business rule
-            revenue = _or_zero(to_number(r.get("GMV"))) - _or_zero(to_number(r.get("Items refunded")))
+            gmv = _or_zero(to_number(r.get("GMV")))
+            refunded = _or_zero(to_number(r.get("Items refunded")))
             rows.append({
                 "funnel_stage": "na",
                 "report_date": d,
-                "revenue": revenue,
+                "revenue": gmv - refunded,
                 "orders": to_number(r.get("Orders")),
                 "units_sold": to_number(r.get("Items sold")),
                 "visitors": None,
                 "buyers": to_number(r.get("Customers")),
+                "gross_revenue": gmv,
+                "refund_amount": refunded,
                 "extra_metrics": extras_dict(r, _DAILY_CORE | {r.index[0]}),
             })
         return pd.DataFrame(rows)
@@ -109,15 +114,18 @@ def parse_daily_sales(path) -> pd.DataFrame:
         numeric_cols = [c for c in data.columns if c != data.columns[0]]
         agg = {c: data[c].apply(to_number).sum(min_count=1) for c in numeric_cols}
         # true revenue = GMV minus refunded items' value, per confirmed business rule
-        revenue = _or_zero(agg.get("GMV")) - _or_zero(agg.get("Items refunded"))
+        gmv = _or_zero(agg.get("GMV"))
+        refunded = _or_zero(agg.get("Items refunded"))
         row = {
             "funnel_stage": "na",
             "report_date": d,
-            "revenue": revenue,
+            "revenue": gmv - refunded,
             "orders": agg.get("Orders"),
             "units_sold": agg.get("Items sold"),
             "visitors": None,
             "buyers": agg.get("Customers"),
+            "gross_revenue": gmv,
+            "refund_amount": refunded,
             "extra_metrics": {k: v for k, v in agg.items() if k not in _DAILY_CORE and pd.notna(v)},
         }
         return pd.DataFrame([row])
@@ -125,9 +133,9 @@ def parse_daily_sales(path) -> pd.DataFrame:
     raise ValueError("Could not find a 'Daily data' or \"Today's data\" section in this TikTok Shop file")
 
 
-_AFFILIATE_CORE = {"Product ID", "Product name", "GMV", "Items sold", "Est. commission"}
+_AFFILIATE_CORE = {"Product ID", "Product name", "GMV", "Items sold", "Est. commission", "Refunded GMV"}
 _CREATOR_CORE = {"Creator username", "Affiliate GMV", "Est. commission", "Affiliate orders",
-                  "Product impressions", "CTR", "Affiliate followers"}
+                  "Product impressions", "CTR", "Affiliate followers", "Affiliate refunded GMV"}
 
 
 def parse_affiliate_marketing(path) -> pd.DataFrame:
@@ -136,15 +144,21 @@ def parse_affiliate_marketing(path) -> pd.DataFrame:
     raw = raw[raw["Product ID"].notna()]
     rows = []
     for _, r in raw.iterrows():
+        # "Refunded GMV" is the monetary refund figure -- distinct from "Refunded items
+        # sold" (a unit count), which must not be subtracted from a currency value
+        gross_sales = _or_zero(to_number(r.get("GMV")))
+        refunded = _or_zero(to_number(r.get("Refunded GMV")))
         rows.append({
             "item_id": str(r["Product ID"]),
             "product_name": r.get("Product name"),
-            "sales": to_number(r.get("GMV")),
+            "sales": gross_sales - refunded,
             "units_sold": to_number(r.get("Items sold")),
             "orders": None,
             "clicks": None,
             "commission": to_number(r.get("Est. commission")),
             "roi": None,
+            "gross_sales": gross_sales,
+            "refund_amount": refunded,
             "extra_metrics": extras_dict(r, _AFFILIATE_CORE),
         })
     return pd.DataFrame(rows)
@@ -156,14 +170,21 @@ def parse_creator_performance(path) -> pd.DataFrame:
     raw = raw[raw["Creator username"].notna()]
     rows = []
     for _, r in raw.iterrows():
+        # "Affiliate refunded GMV" is the monetary refund figure -- distinct from
+        # "Affiliate items refunded" (a unit count), which must not be subtracted from a
+        # currency value
+        gross_gmv = _or_zero(to_number(r.get("Affiliate GMV")))
+        refunded = _or_zero(to_number(r.get("Affiliate refunded GMV")))
         rows.append({
             "creator_username": r.get("Creator username"),
-            "affiliate_gmv": to_number(r.get("Affiliate GMV")),
+            "affiliate_gmv": gross_gmv - refunded,
             "commission": to_number(r.get("Est. commission")),
             "orders": to_number(r.get("Affiliate orders")),
             "impressions": to_number(r.get("Product impressions")),
             "ctr": to_number(r.get("CTR")),
             "followers": to_number(r.get("Affiliate followers")),
+            "gross_affiliate_gmv": gross_gmv,
+            "refund_amount": refunded,
             "extra_metrics": extras_dict(r, _CREATOR_CORE),
         })
     return pd.DataFrame(rows)
@@ -177,18 +198,24 @@ def parse_product_performance(path) -> pd.DataFrame:
     data = data[data[_PRODUCT_CORE_IDX["product_id"]].notna()]
     rows = []
     for _, r in data.iterrows():
+        # "Refunds" (idx 40) is the monetary refund value -- NOT "Items refunded" (idx 41,
+        # a unit count), which must not be subtracted from a currency value
+        gross_sales = _or_zero(to_number(r[_PRODUCT_CORE_IDX["gmv"]]))
+        refunded = _or_zero(to_number(r[_PRODUCT_CORE_IDX["refunds"]]))
         rows.append({
             "period_start": None,
             "period_end": None,
             "item_id": str(r[_PRODUCT_CORE_IDX["product_id"]]),
             "product_name": r[_PRODUCT_CORE_IDX["product_name"]],
-            "sales": to_number(r[_PRODUCT_CORE_IDX["gmv"]]),
+            "sales": gross_sales - refunded,
             "units_sold": to_number(r[_PRODUCT_CORE_IDX["items_sold"]]),
             "orders": to_number(r[_PRODUCT_CORE_IDX["orders"]]),
             "impressions": to_number(r[_PRODUCT_CORE_IDX["impressions"]]),
             "clicks": to_number(r[_PRODUCT_CORE_IDX["clicks"]]),
             "ctr": to_number(r[_PRODUCT_CORE_IDX["ctr"]]),
             "conversion_rate": None,
+            "gross_sales": gross_sales,
+            "refund_amount": refunded,
             # v1 scope: core "All"-segment metrics only (approved plan decision) -- the ~166
             # remaining LIVE/video/affiliate segment columns are not captured here yet.
             "extra_metrics": {},

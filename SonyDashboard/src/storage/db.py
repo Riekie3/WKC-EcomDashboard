@@ -1,7 +1,7 @@
 import os
 
 import streamlit as st
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker
 
 from src.storage.models import Base
@@ -24,6 +24,25 @@ def get_database_url() -> str:
     return f"sqlite:///{DEFAULT_DB_PATH}"
 
 
+def _add_missing_columns(engine):
+    """Add any model columns that don't exist yet on an already-deployed table.
+    Base.metadata.create_all() only creates missing TABLES -- it does nothing for a table
+    that already exists but is missing a column added to the model later (e.g. the
+    gross_revenue/refund_amount columns), so new nullable columns need this instead."""
+    inspector = inspect(engine)
+    existing_tables = set(inspector.get_table_names())
+    with engine.begin() as conn:
+        for table in Base.metadata.sorted_tables:
+            if table.name not in existing_tables:
+                continue
+            existing_cols = {c["name"] for c in inspector.get_columns(table.name)}
+            for col in table.columns:
+                if col.name in existing_cols:
+                    continue
+                col_type = col.type.compile(dialect=engine.dialect)
+                conn.execute(text(f'ALTER TABLE "{table.name}" ADD COLUMN "{col.name}" {col_type}'))
+
+
 def get_engine(database_url: str | None = None):
     database_url = database_url or get_database_url()
     connect_args = {"check_same_thread": False} if database_url.startswith("sqlite") else {}
@@ -31,6 +50,7 @@ def get_engine(database_url: str | None = None):
         os.makedirs(os.path.dirname(DEFAULT_DB_PATH), exist_ok=True)
     engine = create_engine(database_url, connect_args=connect_args)
     Base.metadata.create_all(engine)
+    _add_missing_columns(engine)
     return engine
 
 

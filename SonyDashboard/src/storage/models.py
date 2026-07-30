@@ -43,6 +43,12 @@ class DailySales(Base, _BatchMixin):
     units_sold: Mapped[float | None] = mapped_column(Float, nullable=True)
     visitors: Mapped[float | None] = mapped_column(Float, nullable=True)
     buyers: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # revenue above is already net (gross_revenue - refund_amount); these two are kept
+    # alongside it so refunds/cancellations have their own visible breakdown instead of
+    # silently vanishing into the subtraction. Null where a platform's report has no
+    # separate refund/cancellation figure to break out (e.g. Shopee).
+    gross_revenue: Mapped[float | None] = mapped_column(Float, nullable=True)
+    refund_amount: Mapped[float | None] = mapped_column(Float, nullable=True)
     extra_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
@@ -60,6 +66,9 @@ class ProductPerformance(Base, _BatchMixin):
     clicks: Mapped[float | None] = mapped_column(Float, nullable=True)
     ctr: Mapped[float | None] = mapped_column(Float, nullable=True)
     conversion_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # sales above is already net; see the comment on DailySales.gross_revenue
+    gross_sales: Mapped[float | None] = mapped_column(Float, nullable=True)
+    refund_amount: Mapped[float | None] = mapped_column(Float, nullable=True)
     extra_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
@@ -94,6 +103,9 @@ class AffiliateMarketing(Base, _BatchMixin):
     clicks: Mapped[float | None] = mapped_column(Float, nullable=True)
     commission: Mapped[float | None] = mapped_column(Float, nullable=True)
     roi: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # sales above is already net; see the comment on DailySales.gross_revenue
+    gross_sales: Mapped[float | None] = mapped_column(Float, nullable=True)
+    refund_amount: Mapped[float | None] = mapped_column(Float, nullable=True)
     extra_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
@@ -125,6 +137,9 @@ class CreatorPerformance(Base, _BatchMixin):
     impressions: Mapped[float | None] = mapped_column(Float, nullable=True)
     ctr: Mapped[float | None] = mapped_column(Float, nullable=True)
     followers: Mapped[float | None] = mapped_column(Float, nullable=True)
+    # affiliate_gmv above is already net; see the comment on DailySales.gross_revenue
+    gross_affiliate_gmv: Mapped[float | None] = mapped_column(Float, nullable=True)
+    refund_amount: Mapped[float | None] = mapped_column(Float, nullable=True)
     extra_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
