@@ -1,6 +1,6 @@
 import streamlit as st
 
-from src.ingestion.pipeline import parse_all, parse_with_mapping
+from src.ingestion.pipeline import parse_all, parse_with_companions
 from src.ingestion.router import PLATFORM_LABELS, REPORT_TYPE_LABELS, platforms_with_parsers, available_report_types
 from src.storage.db import get_session
 from src.storage import repository as repo
@@ -70,16 +70,18 @@ if uploaded:
                     st.caption("Select both a platform and a report type to parse this file.")
                     continue
 
-                manual = parse_with_mapping(r.filename, r.raw, platform_key, report_key)
-                if manual.error:
-                    st.error(manual.error)
-                    continue
-                if manual.warnings:
-                    for w in manual.warnings:
-                        st.warning(w)
-                st.caption(f"{len(manual.df)} rows parsed")
-                st.dataframe(manual.df.head(20), width='stretch')
-                ready_to_save.append(manual)
+                for manual in parse_with_companions(r.filename, r.raw, platform_key, report_key):
+                    if manual.report_type != report_key:
+                        st.markdown(f"**Also found in this file: {REPORT_TYPE_LABELS.get(manual.report_type, manual.report_type)}**")
+                    if manual.error:
+                        st.error(manual.error)
+                        continue
+                    if manual.warnings:
+                        for w in manual.warnings:
+                            st.warning(w)
+                    st.caption(f"{len(manual.df)} rows parsed")
+                    st.dataframe(manual.df.head(20), width='stretch')
+                    ready_to_save.append(manual)
 
     if ready_to_save:
         st.subheader("Ready to save")

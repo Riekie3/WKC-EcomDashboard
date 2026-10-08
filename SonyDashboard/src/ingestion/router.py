@@ -3,6 +3,9 @@ import re
 from src.ingestion.parsers import shopee, lazada, tiktok
 
 FILENAME_PATTERNS = [
+    # Shopee's newer one-file shop-stats export (e.g. sony.os.shopee-shop-stats.20260701-20260722.xlsx):
+    # daily Placed/Confirmed/Paid sheets plus the traffic-source channel sheets.
+    (re.compile(r"shopee-shop-stats", re.I), "shopee", "daily_sales"),
     (re.compile(r"^net_data_daily.*_shp\.", re.I), "shopee", "daily_sales"),
     (re.compile(r"^net_data_daily.*_lzd\.", re.I), "lazada", "daily_sales"),
     (re.compile(r"^net_data_daily.*_tt\.", re.I), "tiktok_shop", "daily_sales"),
@@ -23,6 +26,7 @@ PARSERS = {
     ("shopee", "ads_performance"): shopee.parse_ads_performance,
     ("shopee", "affiliate_marketing"): shopee.parse_affiliate_marketing,
     ("shopee", "traffic_source_performance"): shopee.parse_traffic_source_performance,
+    ("shopee", "channel_sales"): shopee.parse_channel_sales,
     ("lazada", "daily_sales"): lazada.parse_daily_sales,
     ("lazada", "product_performance"): lazada.parse_product_performance,
     ("lazada", "ads_performance"): lazada.parse_ads_performance,
@@ -30,6 +34,14 @@ PARSERS = {
     ("tiktok_shop", "product_performance"): tiktok.parse_product_performance,
     ("tiktok_shop", "affiliate_marketing"): tiktok.parse_affiliate_marketing,
     ("tiktok_shop", "creator_performance"): tiktok.parse_creator_performance,
+}
+
+# Reports that live inside the same file as another report. When a file is read as the key,
+# each companion is read from it too -- so one upload fills both, with no second upload or
+# manual assignment. A companion that finds nothing in the file (e.g. an older export without
+# the channel sheets) is skipped quietly; one that finds the sheets but fails is reported.
+COMPANION_REPORTS = {
+    ("shopee", "daily_sales"): ["channel_sales"],
 }
 
 PLATFORM_LABELS = {"shopee": "Shopee", "lazada": "Lazada", "tiktok_shop": "TikTok Shop"}
@@ -40,6 +52,7 @@ REPORT_TYPE_LABELS = {
     "affiliate_marketing": "Affiliate Marketing",
     "traffic_source_performance": "Traffic Source Performance",
     "creator_performance": "Creator Performance",
+    "channel_sales": "Channel Sales",
 }
 
 

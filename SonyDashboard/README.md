@@ -72,7 +72,13 @@ JSON field even though most aren't surfaced on a chart yet.
 
 - **Sales Overview** -- revenue/orders/buyers KPIs and trend, filterable by date range and
   platform. Shopee's headline numbers use the Confirmed Order funnel stage (Placed/Paid are still
-  stored and viewable in an expander).
+  stored and viewable in an expander). The date filter opens on the 90 days ending at the latest
+  day that has data (not on today). A **Shopee sales by channel** section splits confirmed sales
+  into Product Card / Seller Live / Seller Video / Affiliate (these add up to the total) and shows
+  Shopee Ads sales, spend and ROAS alongside as an overlay (ads sales sit across the other
+  channels, so they are never added). It reads the "Source Contribution" sheets of Shopee's
+  shop-stats export, saved automatically as a second report from the same file as Daily Sales,
+  and checks itself against the confirmed daily sales for the same days.
 - **Product Performance** -- top sellers by revenue per platform, from the latest uploaded batch.
 - **Ads Performance** -- daily spend/ROAS for platforms that report it as a time series (Lazada),
   and campaign-level tables for platforms that report it per campaign (Shopee).

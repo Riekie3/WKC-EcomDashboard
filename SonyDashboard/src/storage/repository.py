@@ -3,7 +3,7 @@ from datetime import datetime
 import pandas as pd
 from sqlalchemy import or_
 
-from src.storage.models import FACT_TABLES, UploadBatch, DailySales, AdsPerformance
+from src.storage.models import FACT_TABLES, UploadBatch, DailySales, AdsPerformance, ChannelSales
 
 
 def insert_batch(session, platform: str, report_type: str, source_filename: str, df: pd.DataFrame):
@@ -45,6 +45,11 @@ def delete_by_date_range(session, start_date, end_date, platforms=None) -> int:
         q2 = q2.filter(AdsPerformance.platform.in_(platforms))
     total += q2.delete(synchronize_session=False)
 
+    q3 = session.query(ChannelSales).filter(ChannelSales.report_date.between(start_date, end_date))
+    if platforms:
+        q3 = q3.filter(ChannelSales.platform.in_(platforms))
+    total += q3.delete(synchronize_session=False)
+
     session.commit()
     return total
 
@@ -73,7 +78,21 @@ def count_affected_by_date_range(session, start_date, end_date, platforms=None) 
     )
     if platforms:
         q2 = q2.filter(AdsPerformance.platform.in_(platforms))
-    return n + q2.count()
+    q3 = session.query(ChannelSales).filter(ChannelSales.report_date.between(start_date, end_date))
+    if platforms:
+        q3 = q3.filter(ChannelSales.platform.in_(platforms))
+    return n + q2.count() + q3.count()
+
+
+def latest_report_date(session):
+    """Most recent day that has dated data (daily sales / channel sales), or None if empty."""
+    from sqlalchemy import func
+    days = [
+        session.query(func.max(model.report_date)).scalar()
+        for model in (DailySales, ChannelSales)
+    ]
+    days = [d for d in days if d is not None]
+    return max(days) if days else None
 
 
 def query_df(session, report_type: str, platforms=None, start_date=None, end_date=None) -> pd.DataFrame:

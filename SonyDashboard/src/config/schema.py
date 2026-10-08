@@ -89,8 +89,29 @@ CREATOR_PERFORMANCE_FIELDS = [
     "extra_metrics",
 ]
 
+CHANNEL_SALES_FIELDS = [
+    "funnel_stage",
+    "report_date",
+    "channel",          # product_card | seller_live | seller_video | affiliate | shopee_ads
+    "level",            # 'channel' (the channel's own total) | 'source' (a sub-source inside it)
+    "source",
+    "sales",
+    "sales_ratio",
+    "exposure",         # impressions / live views / video views / content views / ads impressions
+    "clicks",
+    "orders",
+    "units_sold",
+    "ctr",
+    "conversion_rate",
+    "buyers",
+    "ads_expense",      # Shopee Ads only
+    "ads_roas",         # Shopee Ads only
+    "extra_metrics",
+]
+
 PLATFORMS = ["shopee", "lazada", "tiktok_shop"]
 REPORT_TYPES = [
     "daily_sales", "product_performance", "ads_performance",
     "affiliate_marketing", "traffic_source_performance", "creator_performance",
+    "channel_sales",
 ]

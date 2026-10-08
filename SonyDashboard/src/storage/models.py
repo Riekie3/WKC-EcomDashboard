@@ -143,6 +143,32 @@ class CreatorPerformance(Base, _BatchMixin):
     extra_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
 
+class ChannelSales(Base, _BatchMixin):
+    """Shopee confirmed/placed/paid sales split by where the sale came from (Product Card,
+    Seller Live, Seller Video, Affiliate, Shopee Ads), one row per source per day."""
+    __tablename__ = "channel_sales"
+
+    funnel_stage: Mapped[str] = mapped_column(String, default="na")
+    report_date: Mapped[date] = mapped_column(Date, index=True)
+    channel: Mapped[str] = mapped_column(String, index=True)
+    # "channel" = the channel's own total series; "source" = a sub-source inside it
+    # (e.g. Search under Product Card, Affiliate Live under Affiliate).
+    level: Mapped[str] = mapped_column(String, default="channel")
+    source: Mapped[str] = mapped_column(String)
+    sales: Mapped[float | None] = mapped_column(Float, nullable=True)
+    sales_ratio: Mapped[float | None] = mapped_column(Float, nullable=True)
+    exposure: Mapped[float | None] = mapped_column(Float, nullable=True)
+    clicks: Mapped[float | None] = mapped_column(Float, nullable=True)
+    orders: Mapped[float | None] = mapped_column(Float, nullable=True)
+    units_sold: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ctr: Mapped[float | None] = mapped_column(Float, nullable=True)
+    conversion_rate: Mapped[float | None] = mapped_column(Float, nullable=True)
+    buyers: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ads_expense: Mapped[float | None] = mapped_column(Float, nullable=True)
+    ads_roas: Mapped[float | None] = mapped_column(Float, nullable=True)
+    extra_metrics: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+
 FACT_TABLES = {
     "daily_sales": DailySales,
     "product_performance": ProductPerformance,
@@ -150,4 +176,5 @@ FACT_TABLES = {
     "affiliate_marketing": AffiliateMarketing,
     "traffic_source_performance": TrafficSourcePerformance,
     "creator_performance": CreatorPerformance,
+    "channel_sales": ChannelSales,
 }

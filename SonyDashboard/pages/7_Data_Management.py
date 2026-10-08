@@ -40,7 +40,7 @@ else:
 
 st.divider()
 st.subheader("Delete by date range")
-st.caption("Applies to Daily Sales and Ads Performance (Product Performance has no per-row date -- delete it via batch above).")
+st.caption("Applies to Daily Sales, Channel Sales and Ads Performance (Product Performance has no per-row date -- delete it via batch above).")
 
 col1, col2 = st.columns(2)
 start_date = col1.date_input("Start date", value=datetime.date.today() - datetime.timedelta(days=7))

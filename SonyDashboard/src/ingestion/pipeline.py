@@ -13,6 +13,7 @@ REQUIRED_FIELDS = {
     "affiliate_marketing": ["item_id"],
     "traffic_source_performance": ["item_id"],
     "creator_performance": ["creator_username"],
+    "channel_sales": ["report_date", "channel"],
 }
 
 
@@ -87,6 +88,20 @@ def parse_with_mapping(filename: str, data: bytes, platform: str, report_type: s
         )
 
 
+def parse_with_companions(filename: str, data: bytes, platform: str, report_type: str) -> list[ParsedFile]:
+    """parse_with_mapping for the file's own report, plus any companion reports that live in
+    the same file (router.COMPANION_REPORTS). A companion that finds no rows is skipped
+    silently; one that errors is returned so the problem is visible instead of dropped."""
+    results = [parse_with_mapping(filename, data, platform, report_type)]
+    if not results[0].ok:
+        return results
+    for companion in router.COMPANION_REPORTS.get((platform, report_type), []):
+        extra = parse_with_mapping(filename, data, platform, companion)
+        if extra.error or (extra.df is not None and not extra.df.empty):
+            results.append(extra)
+    return results
+
+
 def parse_all(uploaded_files: list[tuple[str, bytes]]) -> list[ParsedFile]:
     results = []
     for name, data in expand_uploads(uploaded_files):
@@ -94,5 +109,5 @@ def parse_all(uploaded_files: list[tuple[str, bytes]]) -> list[ParsedFile]:
         if not platform:
             results.append(ParsedFile(filename=name, raw=data))
             continue
-        results.append(parse_with_mapping(name, data, platform, report_type))
+        results.extend(parse_with_companions(name, data, platform, report_type))
     return results

@@ -15,6 +15,9 @@ from src.storage.models import Base, FACT_TABLES, UploadBatch
 
 ALL_TABLES = {"upload_batches": UploadBatch, **FACT_TABLES}
 BACKUP_FORMAT = "wkc-dashboard-backup"
+# Tables added after the first backups were taken: an older backup that lacks one is still a
+# valid backup (restored as empty for that table) rather than being rejected.
+OPTIONAL_TABLES = {"channel_sales"}
 
 
 def _serialize_value(v):
@@ -67,7 +70,7 @@ def validate_backup(backup_bytes: bytes) -> tuple[bool, str]:
             manifest = json.loads(zf.read("manifest.json"))
             if manifest.get("format") != BACKUP_FORMAT:
                 return False, "This doesn't look like a dashboard backup file (unrecognized format)."
-            missing = [t for t in ALL_TABLES if f"{t}.json" not in names]
+            missing = [t for t in ALL_TABLES if t not in OPTIONAL_TABLES and f"{t}.json" not in names]
             if missing:
                 return False, f"Backup is missing data for: {', '.join(missing)}."
         return True, ""
@@ -83,7 +86,11 @@ def restore_backup(session, backup_bytes: bytes):
 
     with zipfile.ZipFile(io.BytesIO(backup_bytes)) as zf:
         table_data = {}
+        present = set(zf.namelist())
         for table_name, model in ALL_TABLES.items():
+            if f"{table_name}.json" not in present and table_name in OPTIONAL_TABLES:
+                table_data[table_name] = []
+                continue
             raw = json.loads(zf.read(f"{table_name}.json"))
             table_data[table_name] = [_deserialize_row(row, model) for row in raw]
 
