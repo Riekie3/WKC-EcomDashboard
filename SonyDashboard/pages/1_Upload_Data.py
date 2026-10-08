@@ -1,5 +1,6 @@
 import streamlit as st
 
+from src.ingestion.periods import SNAPSHOT_REPORT_TYPES
 from src.ingestion.pipeline import parse_all, parse_with_companions
 from src.ingestion.router import PLATFORM_LABELS, REPORT_TYPE_LABELS, platforms_with_parsers, available_report_types
 from src.storage.db import get_session
@@ -92,11 +93,34 @@ if uploaded:
         for (platform, report_type), n in summary.items():
             st.write(f"- **{platform} — {report_type}**: {n} rows")
 
+        # Reports with no date on each row are saved with the period they cover, so each page can
+        # show the file that matches the dates being viewed instead of whichever was uploaded last.
+        snapshots = [r for r in ready_to_save if r.report_type in SNAPSHOT_REPORT_TYPES and not (
+            r.df is not None and "report_date" in r.df.columns and r.df["report_date"].notna().any())]
+        chosen_periods = {}
+        if snapshots:
+            st.subheader("Dates these files cover")
+            st.caption(
+                "These reports have no date on each row, so the dashboard needs to know which dates "
+                "each file is for. Detected automatically where the file says; otherwise pick the range."
+            )
+            for r in snapshots:
+                label = f"{PLATFORM_LABELS.get(r.platform, r.platform)} — {REPORT_TYPE_LABELS.get(r.report_type, r.report_type)} ({r.filename})"
+                picked = st.date_input(
+                    label, value=tuple(r.period) if r.period else (),
+                    key=f"period_{r.platform}_{r.report_type}_{r.filename}",
+                )
+                if isinstance(picked, tuple) and len(picked) == 2:
+                    chosen_periods[(r.platform, r.report_type, r.filename)] = picked
+                else:
+                    st.warning("No dates picked -- this file will be shown no matter which dates are selected.")
+
         if st.button("Confirm & Save to Dashboard", type="primary"):
             session = get_session()
             saved = []
             for r in ready_to_save:
-                batch_id, n = repo.insert_batch(session, r.platform, r.report_type, r.filename, r.df)
+                period = chosen_periods.get((r.platform, r.report_type, r.filename)) or r.period
+                batch_id, n = repo.insert_batch(session, r.platform, r.report_type, r.filename, r.df, period=period)
                 saved.append((r.platform, r.report_type, n))
             st.success(f"Saved {len(saved)} file(s) to the dashboard. Data is now visible on the other pages.")
             st.balloons()

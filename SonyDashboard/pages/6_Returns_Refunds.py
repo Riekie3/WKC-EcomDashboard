@@ -2,6 +2,7 @@ import plotly.express as px
 import streamlit as st
 
 from src.dashboard.filters import sidebar_filters
+from src.dashboard.snapshots import pick_snapshots, render_snapshot_notes
 from src.ingestion.router import PLATFORM_LABELS
 from src.storage.db import get_session
 from src.storage import repository as repo
@@ -61,8 +62,13 @@ st.divider()
 st.subheader("Product-level refunds")
 session = get_session()
 products = repo.query_df(session, "product_performance", platforms=platforms)
+products = repo.attach_batch_periods(session, products)
 session.close()
 products = products[products["refund_amount"].notna()] if not products.empty else products
+if not products.empty:
+    # no date on each row: show the file whose period matches the selected dates
+    products, product_notes = pick_snapshots(products, start_date, end_date)
+    render_snapshot_notes(product_notes)
 
 if products.empty:
     st.info("No product performance rows with a refund breakdown for this selection.")
@@ -90,10 +96,18 @@ st.divider()
 st.subheader("Affiliate & creator refunds")
 session = get_session()
 aff = repo.query_df(session, "affiliate_marketing", platforms=platforms)
+aff = repo.attach_batch_periods(session, aff)
 creators = repo.query_df(session, "creator_performance", platforms=[p for p in platforms if p == "tiktok_shop"])
+creators = repo.attach_batch_periods(session, creators)
 session.close()
 aff = aff[aff["refund_amount"].notna()] if not aff.empty else aff
 creators = creators[creators["refund_amount"].notna()] if not creators.empty else creators
+if not aff.empty:
+    aff, aff_notes = pick_snapshots(aff, start_date, end_date)
+    render_snapshot_notes(aff_notes)
+if not creators.empty:
+    creators, creator_notes = pick_snapshots(creators, start_date, end_date)
+    render_snapshot_notes(creator_notes)
 
 if aff.empty and creators.empty:
     st.info("No affiliate or creator performance rows with a refund breakdown for this selection.")

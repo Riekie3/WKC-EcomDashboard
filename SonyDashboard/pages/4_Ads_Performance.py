@@ -2,6 +2,7 @@ import plotly.express as px
 import streamlit as st
 
 from src.dashboard.filters import sidebar_filters
+from src.dashboard.snapshots import pick_snapshots, render_snapshot_notes
 from src.ingestion.router import PLATFORM_LABELS
 from src.storage.db import get_session
 from src.storage import repository as repo
@@ -17,6 +18,7 @@ session = get_session()
 # loaded without a DB-level date filter: Shopee's campaign rows have no report_date (they're
 # keyed by campaign start/end instead), so filtering at the query level would silently drop them
 df = repo.query_df(session, "ads_performance", platforms=platforms)
+df = repo.attach_batch_periods(session, df)
 session.close()  # release this read transaction now -- on Postgres an unclosed session
                   # holds its locks until GC'd, which can block later DDL like erase_database()
 
@@ -31,6 +33,11 @@ daily = df[df["report_date"].notna()].copy()
 daily = daily[(daily["report_date"] >= start_date) & (daily["report_date"] <= end_date)]
 
 campaigns = df[df["report_date"].isna()].copy()
+if not campaigns.empty:
+    # campaign-level reports have no date on each row: show the file whose period matches the dates
+    campaigns, campaign_notes = pick_snapshots(campaigns, start_date, end_date)
+else:
+    campaign_notes = {}
 
 if not daily.empty:
     st.subheader("Daily ad spend & ROAS (platforms reporting daily campaign totals)")
@@ -45,8 +52,10 @@ if not daily.empty:
     fig = px.line(trend, x="report_date", y="spend", color="platform_label", markers=True, title="Daily spend")
     st.plotly_chart(fig, width='stretch')
 
-if not campaigns.empty:
+if campaign_notes:
     st.subheader("Campaign / product-level ads (platforms reporting per-campaign totals)")
+    render_snapshot_notes(campaign_notes)
+if not campaigns.empty:
     for platform in campaigns["platform"].unique():
         sub = campaigns[campaigns["platform"] == platform]
         st.write(f"**{PLATFORM_LABELS.get(platform, platform)}**")

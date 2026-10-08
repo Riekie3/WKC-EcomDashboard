@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 import pandas as pd
 
-from src.ingestion import router
+from src.ingestion import periods, router
 
 REQUIRED_FIELDS = {
     "daily_sales": ["report_date"],
@@ -26,6 +26,7 @@ class ParsedFile:
     df: pd.DataFrame | None = None
     error: str | None = None
     warnings: list[str] = field(default_factory=list)
+    period: tuple | None = None  # (start, end) the file covers, when it could be told
 
     @property
     def recognized(self) -> bool:
@@ -80,7 +81,10 @@ def parse_with_mapping(filename: str, data: bytes, platform: str, report_type: s
     try:
         df = parser(io.BytesIO(data))
         warnings = _validate(df, report_type)
-        return ParsedFile(filename=filename, raw=data, platform=platform, report_type=report_type, df=df, warnings=warnings)
+        return ParsedFile(
+            filename=filename, raw=data, platform=platform, report_type=report_type, df=df,
+            warnings=warnings, period=periods.detect_period(filename, data, df),
+        )
     except Exception as e:
         return ParsedFile(
             filename=filename, raw=data, platform=platform, report_type=report_type,

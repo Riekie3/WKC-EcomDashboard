@@ -50,6 +50,16 @@ position rather than name (the one place a reordered column couldn't otherwise r
 at all). A failed file is never added to the dashboard; fix the mismatch (or ask me to update
 the parser for the new format) and re-upload.
 
+**Which dates a file covers.** Reports with no date on each row (product performance, affiliate,
+creator, traffic source, Shopee ad campaigns) are snapshots of a period. Each upload is saved with
+the period it covers -- read from the file's own banner or filename where it says, otherwise asked
+for on the upload screen ("Dates these files cover"). The Product Performance, Ads, Affiliate and
+Returns & Refunds pages then show the file whose period overlaps the selected dates, and say so
+when none does, instead of showing the latest upload under whatever month is selected. Uploads
+saved before this was tracked can be filled in under Data Management ("Fill in missing periods
+automatically" works from a file's dated rows, its filename, or files uploaded alongside it; any
+period can also be set by hand there).
+
 ### Supported report types (per platform)
 
 | Report type | Shopee | Lazada | TikTok Shop |

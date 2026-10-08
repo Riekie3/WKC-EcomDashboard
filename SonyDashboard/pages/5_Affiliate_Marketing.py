@@ -2,6 +2,7 @@ import plotly.express as px
 import streamlit as st
 
 from src.dashboard.filters import sidebar_filters
+from src.dashboard.snapshots import pick_snapshots, render_snapshot_notes
 from src.ingestion.router import PLATFORM_LABELS
 from src.storage.db import get_session
 from src.storage import repository as repo
@@ -10,10 +11,19 @@ from src.dashboard.branding import apply_logo, render_footer
 st.set_page_config(page_title="Affiliate & Marketing", page_icon="🤝", layout="wide")
 apply_logo()
 st.title("🤝 Affiliate & Marketing")
-st.caption("Commission-based / creator-driven performance -- separate from paid CPC ads. These reports don't carry a per-row date, so they show the latest uploaded snapshot per platform.")
+st.caption("Commission-based / creator-driven performance -- separate from paid CPC ads. These reports carry no date on each row, so each file is matched to the selected dates by the period it covers.")
 
-platforms, _, _ = sidebar_filters()
+platforms, start_date, end_date = sidebar_filters()
 session = get_session()
+
+
+def _in_range(df):
+    """Keep the file per platform that matches the selected dates, and say which one it is."""
+    if df.empty:
+        return df
+    df, notes = pick_snapshots(df, start_date, end_date)
+    render_snapshot_notes(notes)
+    return df
 
 
 def _latest_batch_only(df):
@@ -25,10 +35,13 @@ def _latest_batch_only(df):
 
 st.subheader("Affiliate / commission performance by product")
 aff = repo.query_df(session, "affiliate_marketing", platforms=platforms)
+aff = repo.attach_batch_periods(session, aff)
 session.close()  # release each read transaction now -- on Postgres an unclosed session
                   # holds its locks until GC'd, which can block later DDL like erase_database()
 if aff.empty:
     st.info("No affiliate marketing data yet (upload AMS_SHP.csv or AMS_TT.xlsx on the Upload Data page).")
+elif (aff := _in_range(aff)).empty:
+    st.info("No affiliate file covers the selected dates.")
 else:
     aff = _latest_batch_only(aff)
     aff["platform_label"] = aff["platform"].map(PLATFORM_LABELS)
@@ -47,9 +60,12 @@ else:
 st.divider()
 st.subheader("Shopee: traffic-source breakdown by product")
 traffic = repo.query_df(session, "traffic_source_performance", platforms=[p for p in platforms if p == "shopee"])
+traffic = repo.attach_batch_periods(session, traffic)
 session.close()
 if traffic.empty:
     st.info("No traffic-source data yet (upload sales_source_SHP.xlsx on the Upload Data page).")
+elif (traffic := _in_range(traffic)).empty:
+    st.info("No traffic-source file covers the selected dates.")
 else:
     traffic = _latest_batch_only(traffic)
     stage = st.selectbox("Funnel stage", options=["confirmed", "placed", "paid"], key="traffic_stage")
@@ -66,9 +82,12 @@ else:
 st.divider()
 st.subheader("TikTok Shop: creator / affiliate leaderboard")
 creators = repo.query_df(session, "creator_performance", platforms=[p for p in platforms if p == "tiktok_shop"])
+creators = repo.attach_batch_periods(session, creators)
 session.close()
 if creators.empty:
     st.info("No creator performance data yet (upload AMS_TT_Aff.xlsx on the Upload Data page).")
+elif (creators := _in_range(creators)).empty:
+    st.info("No creator file covers the selected dates.")
 else:
     creators = _latest_batch_only(creators)
     top_n = creators.sort_values("affiliate_gmv", ascending=False).head(15)

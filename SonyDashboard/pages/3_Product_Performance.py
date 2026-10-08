@@ -2,6 +2,7 @@ import plotly.express as px
 import streamlit as st
 
 from src.dashboard.filters import sidebar_filters
+from src.dashboard.snapshots import pick_snapshots, render_snapshot_notes
 from src.ingestion.router import PLATFORM_LABELS
 from src.storage.db import get_session
 from src.storage import repository as repo
@@ -11,16 +12,24 @@ st.set_page_config(page_title="Product Performance", page_icon="🏆", layout="w
 apply_logo()
 st.title("🏆 Product Performance")
 
-platforms, _, _ = sidebar_filters()
-st.caption("Product performance reports don't carry a per-row date, so the date filter doesn't apply here -- this shows the latest uploaded snapshot per platform.")
+platforms, start_date, end_date = sidebar_filters()
+st.caption("Product performance reports carry no date on each row, so each file is matched to the selected dates by the period it covers.")
 session = get_session()
 
 df = repo.query_df(session, "product_performance", platforms=platforms)
+df = repo.attach_batch_periods(session, df)
 session.close()  # release this read transaction now -- on Postgres an unclosed session
                   # holds its locks until GC'd, which can block later DDL like erase_database()
 
 if df.empty:
     st.info("No product performance data for this selection yet. Upload data on the Upload Data page.")
+    render_footer()
+    st.stop()
+
+df, snapshot_notes = pick_snapshots(df, start_date, end_date)
+render_snapshot_notes(snapshot_notes)
+if df.empty:
+    st.info("No product performance file covers the selected dates.")
     render_footer()
     st.stop()
 

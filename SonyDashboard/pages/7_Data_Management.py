@@ -1,5 +1,6 @@
 import datetime
 
+import pandas as pd
 import streamlit as st
 
 from src.ingestion.router import PLATFORM_LABELS, REPORT_TYPE_LABELS
@@ -37,6 +38,41 @@ else:
         n = repo.delete_by_batch_id(session, batch_options[picked_label])
         st.success(f"Deleted {n} row(s) from batch.")
         st.rerun()
+
+    st.markdown("**Set the dates a file covers**")
+    st.caption(
+        "Reports without a date on each row (product performance, affiliate, creator, ad campaigns) "
+        "are matched to the dates you view by this period. Files uploaded before periods were tracked "
+        "have none, so they can show under the wrong month."
+    )
+    missing_periods = int(batches["period_start"].isna().sum())
+    if missing_periods:
+        st.write(f"{missing_periods} upload(s) have no period recorded.")
+        if st.button("Fill in missing periods automatically"):
+            filled = repo.backfill_batch_periods(session)
+            if filled:
+                st.success(f"Set the period of {len(filled)} upload(s):")
+                for batch, (start, end), how in filled:
+                    st.write(f"- `{batch.source_filename}` → {start:%d %b %Y} – {end:%d %b %Y} ({how})")
+                st.caption("Check these, and correct any below. A file that couldn't be worked out is left as it is.")
+            else:
+                st.info("Couldn't work out any of them -- set them one by one below.")
+    else:
+        st.write("Every upload has a period recorded.")
+    period_pick = st.selectbox("File", options=list(batch_options.keys()), key="period_batch_pick")
+    current = batches[batches["id"] == batch_options[period_pick]].iloc[0]
+    has_period = bool(pd.notna(current["period_start"]) and pd.notna(current["period_end"]))
+    new_period = st.date_input(
+        "Covers", value=(current["period_start"], current["period_end"]) if has_period else (),
+        key="period_batch_dates",
+    )
+    if st.button("Save period"):
+        if isinstance(new_period, tuple) and len(new_period) == 2:
+            repo.set_batch_period(session, batch_options[period_pick], new_period[0], new_period[1])
+            st.success("Period saved.")
+            st.rerun()
+        else:
+            st.error("Pick both a start and an end date.")
 
 st.divider()
 st.subheader("Delete by date range")

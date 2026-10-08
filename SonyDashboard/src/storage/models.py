@@ -23,6 +23,10 @@ class UploadBatch(Base):
     uploaded_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, index=True)
     row_count: Mapped[int] = mapped_column(Integer, default=0)
     status: Mapped[str] = mapped_column(String, default="committed")
+    # The dates this file covers, when known. Matters most for snapshot reports (product
+    # performance, affiliate, ...) whose rows carry no date of their own.
+    period_start: Mapped[date | None] = mapped_column(Date, nullable=True)
+    period_end: Mapped[date | None] = mapped_column(Date, nullable=True)
 
 
 class _BatchMixin:
